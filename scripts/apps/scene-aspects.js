@@ -1,0 +1,460 @@
+import { AspectStorage } from "../helpers/aspect-storage.js";
+
+export class SceneAspectsApp extends FormApplication {
+    static get defaultOptions() {
+        return foundry.utils.mergeObject(super.defaultOptions, {
+            id: "fatex-scene-aspects",
+            title: game.i18n.localize("FAx.Global.ManageAspects"),
+            template: "modules/fatex-extras/templates/scene-aspects.hbs",
+            width: 500,
+            height: 600,
+            classes: ["fatex", "fatex-extras-app"],
+            resizable: true,
+            closeOnSubmit: false,
+            submitOnChange: false,
+            scrollY: [".fatex-desk__content"],
+            dragDrop: [
+                { dragSelector: ".fatex-scene-aspect, .aspect-tag-pill, .fatex-group-header", dropSelector: ".fatex-desk__aspects" }
+            ]
+        });
+    }
+
+    _autoResizeTextareas() {
+        this.element.find("textarea.aspect-name").each(function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        });
+    }
+
+    _onResize(event) {
+        super._onResize(event);
+        this._autoResizeTextareas();
+    }
+
+    async getData() {
+        const storage = await AspectStorage.getStorage();
+        
+        const aspects = storage ? (storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []) : [];
+        const groups = storage ? (storage.getFlag("fatex-extras", AspectStorage.FLAGS.GROUPS) || []) : [];
+        const globalTags = storage ? (storage.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || []) : [];
+
+        const filteredAspects = game.user.isGM ? aspects : aspects.filter(a => !a.hidden);
+        const filteredGroups = game.user.isGM ? groups : groups.filter(g => !g.hidden);
+        
+        const groupedData = filteredGroups.map(g => {
+            return {
+                ...g,
+                aspects: filteredAspects.filter(a => a.groupId === g.id).map(a => {
+                    const aspectTags = (a.tagIds || []).map(tid => globalTags.find(t => t.id === tid)).filter(t => !!t);
+                    return { ...a, displayTags: aspectTags, isGM: game.user.isGM };
+                })
+            };
+        });
+        
+        const orphanAspects = filteredAspects.filter(a => !a.groupId || !groups.some(g => g.id === a.groupId)).map(a => {
+            const aspectTags = (a.tagIds || []).map(tid => globalTags.find(t => t.id === tid)).filter(t => !!t);
+            return { ...a, displayTags: aspectTags, isGM: game.user.isGM };
+        });
+
+        if (orphanAspects.length > 0) {
+            groupedData.push({ id: "default", label: game.i18n.localize("FAx.Global.Uncategorized"), aspects: orphanAspects });
+        }
+
+        return { 
+            groups: groupedData, 
+            globalTags: globalTags, 
+            isGM: game.user.isGM,
+            waitingForGM: !storage && !game.user.isGM
+        };
+    }
+
+    activateListeners(html) {
+        super.activateListeners(html);
+        html.find(".create-group").on("click", (e) => this._onCreateGroup(e));
+        html.find(".group-label").on("change", (e) => this._onUpdateGroupLabel(e));
+        html.find(".group-delete").on("click", (e) => this._onDeleteGroup(e));
+        html.find(".group-visibility").on("click", (e) => this._onToggleGroupVisibility(e));
+        html.find(".manage-tags").on("click", (e) => this._onManageTags(e));
+        html.find(".aspect-color-trigger").on("change", (e) => this._onUpdateAspect(e));
+        html.find(".create-aspect").on("click", (e) => this._onCreateAspect(e));
+        html.find(".aspect-delete").on("click", (e) => this._onDeleteAspect(e));
+        html.find(".aspect-name").on("change", (e) => this._onUpdateAspect(e));
+        html.find(".aspect-tag-remove").on("click", (e) => this._onRemoveTagFromAspect(e));
+        html.find(".add-tag-to-aspect").on("click", (e) => this._onShowTagPicker(e));
+        html.find(".aspect-visibility").on("click", (e) => this._onToggleVisibility(e));
+        html.find("textarea.aspect-name").each(function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        }).on("input", function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        });
+        html.find(".invoke-control").on("click", (e) => this._onModifyInvokes(e));
+    }
+
+    async _onManageTags(event) {
+        event.preventDefault();
+        if (!game.user.isGM) return;
+        const storage = await AspectStorage.getStorage();
+        if (!storage) return;
+
+        const tags = storage.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || [];
+        let tagHtml = `<div class="fatex-tag-manager">`;
+        tags.forEach((tag) => {
+            tagHtml += `<div class="fatex-tag-row" data-id="${tag.id}"><input type="text" class="tag-label" value="${tag.label}" placeholder="${game.i18n.localize("FAx.Global.TagName")}"><input type="color" class="tag-color" value="${tag.color || "#7a7a7a"}"><i class="fas fa-trash delete-tag"></i></div>`;
+        });
+        tagHtml += `<button type="button" class="add-tag-btn"><i class="fas fa-plus"></i> ${game.i18n.localize("FAx.Global.AddTag")}</button></div>`;
+
+        new Dialog({
+            title: game.i18n.localize("FAx.Global.ManageTags"),
+            content: tagHtml,
+            buttons: {
+                save: {
+                    label: game.i18n.localize("FAx.Global.Save"),
+                    callback: async (html) => {
+                        const newTags = [];
+                        html.find(".fatex-tag-row").each(function() {
+                            const existingId = $(this).attr("data-id");
+                            newTags.push({
+                                id: existingId && existingId !== "" ? existingId : foundry.utils.randomID(),
+                                label: $(this).find(".tag-label").val(),
+                                color: $(this).find(".tag-color").val()
+                            });
+                        });
+                        const aspects = await this._getAspects();
+                        const validTagIds = newTags.map(t => t.id);
+                        aspects.forEach(a => { if (a.tagIds) a.tagIds = a.tagIds.filter(tid => validTagIds.includes(tid)); });
+                        await this._saveAll(aspects, null, newTags);
+                    }
+                }
+            },
+            render: (html) => {
+                html.find(".add-tag-btn").click(() => {
+                    const newRow = $(`<div class="fatex-tag-row" data-id=""><input type="text" class="tag-label" value="${game.i18n.localize("FAx.Global.NewTag")}" placeholder="${game.i18n.localize("FAx.Global.TagName")}"><input type="color" class="tag-color" value="#7a7a7a"><i class="fas fa-trash delete-tag"></i></div>`);
+                    newRow.find(".delete-tag").click(function() { $(this).closest(".fatex-tag-row").remove(); });
+                    html.find(".fatex-tag-row").last().after(newRow);
+                });
+                html.find(".delete-tag").click(function() { $(this).closest(".fatex-tag-row").remove(); });
+            }
+        }).render(true);
+    }
+
+    async _onShowTagPicker(event) {
+        if (!game.user.isGM) return;
+        const aspectId = event.currentTarget.dataset.id;
+        const storage = await AspectStorage.getStorage();
+        if (!storage) return;
+
+        const globalTags = storage.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || [];
+        const aspects = await this._getAspects();
+        const aspect = aspects.find(a => a.id === aspectId);
+        if (!aspect) return;
+
+        const currentTagIds = aspect.tagIds || [];
+        const availableTags = globalTags.filter(t => !currentTagIds.includes(t.id));
+
+        let content = `<div class="fatex-tag-picker">`;
+        if (availableTags.length > 0) {
+            content += `<label><b>${game.i18n.localize("FAx.Global.PickExistingTag")}</b></label><div class="tag-list-scroll">`;
+            availableTags.forEach(t => { content += `<button class="pick-tag" data-tag-id="${t.id}" style="border-left: 4px solid ${t.color}">${t.label}</button>`; });
+            content += `</div><hr>`;
+        }
+        content += `<label><b>${game.i18n.localize("FAx.Global.CreateNewTag")}</b></label><div class="form-group"><input type="text" id="new-tag-name" placeholder="${game.i18n.localize("FAx.Global.TagName")}" style="margin-bottom: 5px;"><div style="display: flex; align-items: center; gap: 10px;"><label>${game.i18n.localize("FAx.Global.Color")}</label><input type="color" id="new-tag-color" value="#7a7a7a" style="height: 30px; cursor: pointer;"></div></div></div>`;
+
+        const d = new Dialog({
+            title: game.i18n.localize("FAx.Global.AddTag"),
+            content: content,
+            buttons: {
+                create: {
+                    icon: '<i class="fas fa-plus"></i>',
+                    label: game.i18n.localize("FAx.Global.CreateAndAdd"),
+                    callback: async (html) => {
+                        const name = html.find("#new-tag-name").val().trim();
+                        const color = html.find("#new-tag-color").val();
+                        if (!name) return;
+                        const newTag = { id: foundry.utils.randomID(), label: name, color: color };
+                        const updatedGlobalTags = [...globalTags, newTag];
+                        const updatedAspects = await this._getAspects();
+                        const targetAspect = updatedAspects.find(a => a.id === aspectId);
+                        if (targetAspect) targetAspect.tagIds = [...(targetAspect.tagIds || []), newTag.id];
+                        await this._saveAll(updatedAspects, null, updatedGlobalTags);
+                    }
+                }
+            },
+            default: "create",
+            render: (html) => {
+                html.find(".pick-tag").click(async (e) => {
+                    const tid = e.currentTarget.dataset.tagId;
+                    const updatedAspects = await this._getAspects();
+                    const targetAspect = updatedAspects.find(a => a.id === aspectId);
+                    if (targetAspect) targetAspect.tagIds = [...(targetAspect.tagIds || []), tid];
+                    await this._saveAspects(updatedAspects);
+                    d.close();
+                });
+            }
+        }, { width: 400 });
+        d.render(true);
+    }
+
+    async _onRemoveTagFromAspect(event) {
+        if (!game.user.isGM) return;
+        const aspects = await this._getAspects();
+        const aspect = aspects.find(a => a.id === event.currentTarget.dataset.id);
+        if (aspect && aspect.tagIds) {
+            aspect.tagIds = aspect.tagIds.filter(tid => tid !== event.currentTarget.dataset.tagId);
+            await this._saveAspects(aspects);
+        }
+    }
+
+    async _onToggleGroupVisibility(event) {
+        event.preventDefault();
+        if (!game.user.isGM) return;
+        const groups = await this._getGroups();
+        const group = groups.find(g => g.id === event.currentTarget.dataset.groupId);
+        if (group) { group.hidden = !group.hidden; await this._saveGroups(groups); }
+    }
+
+    async _onToggleVisibility(event) {
+        event.preventDefault();
+        if (!game.user.isGM) return;
+        const aspects = await this._getAspects();
+        const aspect = aspects.find(a => a.id === event.currentTarget.dataset.id);
+        if (aspect) { aspect.hidden = !aspect.hidden; await this._saveAspects(aspects); }
+    }
+
+    async _onCreateAspect(event) {
+        if (!game.user.isGM) return;
+        const groupId = event.currentTarget.dataset.groupId || "default";
+        const aspects = await this._getAspects();
+        aspects.push({ id: foundry.utils.randomID(), name: game.i18n.localize("FAx.Global.NewAspect"), color: "#4a4a4a", tagIds: [], invokes: 0, hostileInvokes: 0, groupId: groupId });
+        await this._saveAspects(aspects);
+    }
+
+    async _onCreateGroup(event) {
+        if (!game.user.isGM) return;
+        const groups = await this._getGroups();
+        groups.push({ id: foundry.utils.randomID(), label: game.i18n.localize("FAx.Global.NewCategory") });
+        await this._saveGroups(groups);
+    }
+
+    async _onUpdateGroupLabel(event) {
+        if (!game.user.isGM) return;
+        const groups = await this._getGroups();
+        const group = groups.find(g => g.id === event.currentTarget.dataset.groupId);
+        if (group) { group.label = event.currentTarget.value; await this._saveGroups(groups); }
+    }
+
+    async _onDeleteGroup(event) {
+        if (!game.user.isGM) return;
+        const groupId = event.currentTarget.dataset.groupId;
+        const confirm = await Dialog.confirm({ title: game.i18n.localize("FAx.Global.DeleteCategory"), content: game.i18n.localize("FAx.Global.DeleteCategoryConfirm"), defaultYes: false });
+        if (!confirm) return;
+        
+        let groups = await this._getGroups();
+        groups = groups.filter(g => g.id !== groupId);
+        
+        let aspects = await this._getAspects();
+        aspects = aspects.filter(a => a.groupId !== groupId);
+        
+        await this._saveAll(aspects, groups);
+    }
+
+    async _onDeleteAspect(event) {
+        if (!game.user.isGM) return;
+        const confirm = await Dialog.confirm({ title: game.i18n.localize("FAx.Global.DeleteAspectTitle"), content: game.i18n.localize("FAx.Global.DeleteAspectConfirm"), defaultYes: false });
+        if (!confirm) return;
+        
+        let aspects = await this._getAspects();
+        aspects = aspects.filter(a => a.id !== event.currentTarget.dataset.id);
+        await this._saveAspects(aspects);
+    }
+
+    async _onUpdateAspect(event) {
+        if (!game.user.isGM) return;
+        const input = event.currentTarget;
+        const aspects = await this._getAspects();
+        const aspect = aspects.find(a => a.id === input.dataset.id);
+        if (aspect) { aspect[input.dataset.field || "name"] = input.value; await this._saveAspects(aspects); }
+    }
+
+    async _onModifyInvokes(event) {
+        const btn = event.currentTarget;
+        const aspects = await this._getAspects();
+        const aspect = aspects.find(a => a.id === btn.dataset.id);
+        if (aspect) {
+            const field = btn.dataset.field || "invokes";
+            if (btn.dataset.action === "increase") aspect[field] = (aspect[field] || 0) + 1;
+            else aspect[field] = Math.max(0, (aspect[field] || 0) - 1);
+            await this._saveAspects(aspects);
+        }
+    }
+
+    async _updateObject(event, formData) {}
+
+    async _getGroups() { 
+        const storage = await AspectStorage.getStorage();
+        return storage ? foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.GROUPS) || []) : []; 
+    }
+    
+    async _getAspects() { 
+        const storage = await AspectStorage.getStorage();
+        return storage ? foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []) : []; 
+    }
+
+    async _saveGroups(groups) { await this._saveAll(null, groups); }
+    async _saveAspects(aspects) { await this._saveAll(aspects, null); }
+
+    async _saveAll(aspects = null, groups = null, tags = null) {
+        const storage = await AspectStorage.getStorage();
+        if (!storage) {
+            ui.notifications.warn(game.i18n.localize("FAx.Global.AspectStorageNotAvailable"));
+            return;
+        }
+
+        if (aspects !== null) await storage.setFlag("fatex-extras", "sceneAspects", aspects);
+        if (groups !== null) await storage.setFlag("fatex-extras", "sceneAspectGroups", groups);
+        if (tags !== null) await storage.setFlag("fatex-extras", "sceneAspectTags", tags);
+    }
+
+    _onDragStart(event) {
+        if (!game.user.isGM) return;
+        const li = event.currentTarget;
+        if (li.classList.contains("aspect-tag-pill")) {
+            this._dragType = "tag";
+            event.dataTransfer.setData("text/plain", JSON.stringify({ type: "SceneAspectTag", aspectId: li.dataset.id, tagId: li.dataset.tagId }));
+        } else if (li.classList.contains("fatex-group-header")) {
+            this._dragType = "group";
+            event.dataTransfer.setData("text/plain", JSON.stringify({ type: "SceneAspectGroup", id: li.dataset.groupId }));
+        } else {
+            this._dragType = "aspect";
+            event.dataTransfer.setData("text/plain", JSON.stringify({ type: "SceneAspect", id: li.dataset.id }));
+        }
+    }
+
+    _onDragOver(event) {
+        event.preventDefault();
+        
+        const clearIndicators = () => {
+            this.element.find(".fatex-scene-aspect, .fatex-aspect-group, .aspect-tag-pill").removeClass("drag-left drag-right");
+        };
+
+        if (this._dragType === "tag") {
+            clearIndicators();
+            const tagPill = event.target.closest(".aspect-tag-pill");
+            if (tagPill) {
+                const rect = tagPill.getBoundingClientRect();
+                if (event.clientX < rect.left + rect.width / 2) tagPill.classList.add("drag-left");
+                else tagPill.classList.add("drag-right");
+            }
+        } 
+        else if (this._dragType === "group") {
+            const group = event.target.closest(".fatex-aspect-group");
+            
+            if (!group) {
+                clearIndicators();
+                return; 
+            }
+
+            const draggedId = JSON.parse(event.dataTransfer.getData("text/plain") || "{}").id;
+
+            const rect = group.getBoundingClientRect();
+            const isLeft = event.clientX < rect.left + rect.width / 2;
+            const newClass = isLeft ? "drag-left" : "drag-right";
+
+            if (group.classList.contains(newClass)) return;
+
+            clearIndicators();
+            
+            group.classList.add(newClass);
+        } 
+        else if (this._dragType === "aspect") {
+            const aspect = event.target.closest(".fatex-scene-aspect");
+            if (aspect) {
+                const rect = aspect.getBoundingClientRect();
+                const isLeft = event.clientX < rect.left + rect.width / 2;
+                const newClass = isLeft ? "drag-left" : "drag-right";
+
+                if (aspect.classList.contains(newClass)) return;
+
+                clearIndicators();
+                aspect.classList.add(newClass);
+            } else {
+                clearIndicators();
+            }
+        }
+    }
+
+    async _onDrop(event) {
+        if (!game.user.isGM) return;
+        this.element.find(".fatex-scene-aspect, .fatex-aspect-group, .aspect-tag-pill").removeClass("drag-top drag-bottom drag-left drag-right");
+        let data;
+        try { data = JSON.parse(event.dataTransfer.getData("text/plain")); } catch (err) { return; }
+
+        if (data.type === "SceneAspectGroup") {
+            const groups = await this._getGroups();
+            const sourceIndex = groups.findIndex(g => g.id === data.id);
+            const targetGroup = event.target.closest(".fatex-aspect-group");
+            
+            if (!targetGroup) {
+                if (sourceIndex > -1) {
+                    const [item] = groups.splice(sourceIndex, 1);
+                    groups.push(item);
+                    await this._saveGroups(groups);
+                }
+                return;
+            }
+
+            if (sourceIndex === -1) return;
+            const targetIndex = groups.findIndex(g => g.id === targetGroup.dataset.groupId);
+            const rect = targetGroup.getBoundingClientRect();
+            let destinationIndex = targetIndex + (event.clientX >= rect.left + rect.width / 2 ? 1 : 0);
+            const [item] = groups.splice(sourceIndex, 1);
+            if (sourceIndex < destinationIndex) destinationIndex--;
+            groups.splice(destinationIndex, 0, item);
+            await this._saveGroups(groups);
+        } else if (data.type === "SceneAspectTag") {
+            const aspects = await this._getAspects();
+            const sourceAspect = aspects.find(a => a.id === data.aspectId);
+            const targetList = event.target.closest(".aspect-tags-list");
+            if (!sourceAspect || !targetList) return;
+            const targetAspectId = targetList.querySelector(".add-tag-to-aspect").dataset.id;
+            const targetAspect = aspects.find(a => a.id === targetAspectId);
+            if (!targetAspect) return;
+            if (data.aspectId !== targetAspectId && (targetAspect.tagIds || []).includes(data.tagId)) {
+                ui.notifications.warn(game.i18n.localize("FAx.Global.AspectAlreadyHasTag")); return;
+            }
+            sourceAspect.tagIds = (sourceAspect.tagIds || []).filter(tid => tid !== data.tagId);
+            const targetPill = event.target.closest(".aspect-tag-pill");
+            if (targetPill) {
+                const rect = targetPill.getBoundingClientRect();
+                let targetIndex = (targetAspect.tagIds || []).indexOf(targetPill.dataset.tagId);
+                if (event.clientX >= rect.left + rect.width / 2) targetIndex++;
+                targetAspect.tagIds.splice(targetIndex, 0, data.tagId);
+            } else { targetAspect.tagIds.push(data.tagId); }
+            await this._saveAspects(aspects);
+        } else if (data.type === "SceneAspect") {
+            const aspects = await this._getAspects();
+            const sourceAspect = aspects.find(a => a.id === data.id);
+            if (!sourceAspect) return;
+            const targetLink = event.target.closest(".fatex-scene-aspect");
+            const targetGroup = event.target.closest(".fatex-aspect-group");
+            if (targetLink) {
+                const targetAspect = aspects.find(a => a.id === targetLink.dataset.id);
+                const sourceIndex = aspects.indexOf(sourceAspect);
+                const targetIndex = aspects.indexOf(targetAspect);
+                const rect = targetLink.getBoundingClientRect();
+                let destinationIndex = targetIndex + (event.clientX >= rect.left + rect.width / 2 ? 1 : 0);
+                sourceAspect.groupId = targetAspect.groupId;
+                aspects.splice(sourceIndex, 1);
+                if (sourceIndex < destinationIndex) destinationIndex--;
+                aspects.splice(destinationIndex, 0, sourceAspect);
+            } else if (targetGroup) {
+                sourceAspect.groupId = targetGroup.dataset.groupId;
+                aspects.splice(aspects.indexOf(sourceAspect), 1);
+                aspects.push(sourceAspect);
+            }
+            await this._saveAspects(aspects);
+        }
+        this._dragType = null;
+    }
+}

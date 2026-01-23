@@ -1,0 +1,73 @@
+{
+    "FAx": {
+        "Global": {
+            "SceneAspects": "Аспекты",
+            "ManageAspects": "Менеджер аспектов",
+            "Add": "Добавить аспект",
+            "AspectName": "Название аспекта",
+            "Type": "Тип",
+            "Game": "Аспект игры",
+            "Situation": "Ситуационный аспект",
+            "Boost": "Ускорение",
+            "Other": "Другое",
+            "Invokes": "Бесплатные призывы",
+            "HostileInvokes": "Призывы ГМа",
+            "NoAspects": "Аспекты сцены еще не созданы.",
+            "AddCategory": "Новая категория",
+            "DeleteAspectTitle": "Удалить аспект",
+            "DeleteAspectConfirm": "Вы уверены, что хотите удалить этот аспект?",
+            "Uncategorized": "Без категории",
+            "NewAspect": "Новый аспект",
+            "NewCategory": "Новая категория",
+            "DeleteCategory": "Удалить категорию",
+            "DeleteCategoryConfirm": "Вы уверены, что хотите удалить эту категорию и все ее аспекты?",
+            "AspectStorageNotAvailable": "Хранилище аспектов недоступно. Попросите ГМа инициализировать его.",
+            "AspectAlreadyHasTag": "У этого аспекта уже есть этот тег.",
+            "ManageTags": "Управление определениями тегов",
+            "Save": "Сохранить изменения",
+            "NewTag": "Новый тег",
+            "TagName": "Название тега",
+            "CreateNewTag": "Создать новый тег",
+            "Color": "Цвет:",
+            "AddTag": "Добавить тег",
+            "CreateAndAdd": "Создать и добавить",
+            "Tags": "Теги",
+            "Category": "Категория",
+            "PickExistingTag": "Выбрать существующий тег",
+            "GlobalAspectsJournalName": "Глобальные аспекты FateX",
+            "CannotDeleteStorage": "FateX Extras: Эта запись журнала хранит глобальные аспекты и не может быть удалена вручную.",
+            "Delete": "Удалить"
+        },
+        "Dice": {
+            "SystemName": "FateX Extras"
+        },
+        "Settings": {
+            "DarkMode": "Включить темный режим",
+            "DarkModeHint": "Включает темную тему для всех окон и листов."
+        },
+        "NewSession": {
+            "Title": "Начать новую сессию",
+            "Question": "Готовы начать новую сессию? Это обновит жетоны судьбы для этого персонажа.",
+            "Confirm": "Да",
+            "Cancel": "Нет",
+            "Success": "Новая сессия: Жетоны судьбы обновлены для {name}.",
+            "AlreadyFull": "У {name} уже достаточно или больше жетонов судьбы, чем значение обновления."
+        },
+        "CostDialog": {
+            "Title": "Выбор цены",
+            "Description": "Как вы хотите заплатить за это действие?",
+            "PayFatePoint": "Потратить жетон судьбы",
+            "Current": "Сейчас",
+            "UseFreeInvoke": "Использовать бесплатный призыв",
+            "Free": "Бесплатно (без траты призыва или жетона)",
+            "PayAndProceed": "Продолжить",
+            "Cancel": "Отмена",
+            "Consequence": "Последствие",
+            "Aspect": "Аспект"
+        },
+        "RollHistory": {
+            "Added": "добавил {amount}",
+            "Rerolled": "перебросил (было {previous})"
+        }
+    }
+}

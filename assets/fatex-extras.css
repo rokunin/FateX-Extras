@@ -1,0 +1,460 @@
+
+.app.fatex-extras-app {
+    min-width: 400px !important;
+}
+
+.fatex__actor_group__sheet__navigation a {
+    box-shadow: none !important;
+}
+
+.fatex-roll-actions button[data-action="increase-one"],
+.fatex-roll-actions button[data-action="decrease-one"] {
+    min-width: 30px;
+}
+
+.fatex-scene-aspects .fatex-desk__content {
+    padding: 10px;
+}
+
+.fatex-scene-aspects .fatex-header {
+    background: #2f3542;
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 3px 3px 0 0;
+}
+
+.fatex-scene-aspects .fatex-header__name {
+    display: flex;
+    flex-direction: column;
+}
+
+.fatex-header__actions {
+    display: flex;
+    gap: 10px;
+}
+
+.fatex-tag-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.fatex-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.05);
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.fatex-tag-row input[type="text"] {
+    flex: 1;
+}
+
+.fatex-tag-row .delete-tag {
+    cursor: pointer;
+    color: #7a7971;
+}
+
+.fatex-tag-row .delete-tag:hover {
+    color: #ff0000;
+}
+
+.add-tag-btn {
+    margin-top: 10px;
+}
+
+.aspect-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    margin: 5px 0;
+    min-height: 20px;
+}
+
+.aspect-tag-pill {
+    flex: 0 1 auto;
+    max-width: 100%;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+    cursor: grab;
+    transition: border 0.2s;
+    word-break: break-word;
+    box-sizing: border-box;
+}
+
+.aspect-tag-pill:active {
+    cursor: grabbing;
+}
+
+.aspect-tag-pill.drag-left {
+    border-left: 4px solid white;
+}
+
+.aspect-tag-pill.drag-right {
+    border-right: 4px solid white;
+}
+
+.aspect-tag-remove {
+    cursor: pointer;
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+.aspect-tag-remove:hover {
+    opacity: 1;
+}
+
+.add-tag-to-aspect {
+    flex: 0 0 auto;
+    width: auto !important;
+    min-width: 0;
+    background: rgba(0,0,0,0.1);
+    border: 1px dashed rgba(0,0,0,0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #7a7971;
+    transition: background 0.2s;
+    margin: 0;
+}
+
+.add-tag-to-aspect:hover {
+    background: rgba(0,0,0,0.15);
+}
+
+.fatex-tag-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tag-list-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-right: 10px;
+    margin-right: -5px;
+}
+
+.pick-tag {
+    text-align: left;
+    padding: 8px;
+    background: rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pick-tag:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.fatex-scene-aspect {
+    flex: 1 1 300px;
+    position: relative;
+    margin-bottom: 0;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    padding: 5px;
+    border: 1px solid rgba(0,0,0,0.1);
+    cursor: grab;
+    transition: border 0.2s, box-shadow 0.2s;
+    max-width: 100%;
+}
+
+.fatex-scene-aspect:hover {
+    box-shadow: inset 6px 0 0 rgba(255,255,255,0.2);
+}
+
+.fatex-scene-aspect:active {
+    cursor: grabbing;
+}
+
+.aspect-color-trigger {
+    position: absolute;
+    top: 0;
+    left: -6px;
+    width: 6px;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.fatex-scene-aspect.drag-left {
+    box-shadow: -4px 0 0 var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2);
+}
+
+.fatex-scene-aspect.drag-right {
+    box-shadow: 4px 0 0 var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2);
+}
+
+.fatex-aspect-group.drag-left {
+    box-shadow: -4px 0 0 var(--color-shadow-primary, #ff6400), 0 0 5px rgba(0,0,0,0.2);
+}
+
+.fatex-aspect-group.drag-right {
+    box-shadow: 4px 0 0 var(--color-shadow-primary, #ff6400), 0 0 5px rgba(0,0,0,0.2);
+}
+
+.fatex-row-main {
+    margin-bottom: 8px;
+}
+
+.fatex-row-main .aspect-name {
+    width: 100%;
+    resize: none;
+    overflow: hidden;
+    min-height: 32px;
+    font-family: inherit;
+    line-height: 1.4;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    transition: background-color 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+    word-break: break-word;
+    display: block;
+}
+
+.fatex-row-main .aspect-name:focus {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+.fatex-row-details {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+}
+
+.aspect-invokes-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.invoke-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.invoke-counter.hostile {
+    background: rgba(255, 0, 0, 0.1);
+    color: #a00;
+}
+
+.invoke-counter.hostile .invoke-control:hover {
+    color: #ff0000;
+}
+
+.invoke-control {
+    cursor: pointer;
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.invoke-control:hover {
+    opacity: 1;
+}
+
+.invoke-value {
+    min-width: 15px;
+    text-align: center;
+}
+
+.aspect-actions-wrapper {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 5;
+}
+
+.aspect-item-actions {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+}
+
+.fatex-js-item-to-chat:hover {
+    color: #000;
+}
+
+.aspect-delete, .aspect-visibility {
+    cursor: pointer;
+    color: #7a7971;
+    transition: color 0.2s;
+}
+
+.aspect-visibility:hover {
+    color: #1a75ff;
+}
+
+.aspect-item-actions {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+}
+
+.fatex-scene-aspect.is-hidden {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+
+.aspect-delete:hover {
+    color: #ff0000;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+}
+
+.fatex-desk__aspects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 10px;
+    width: 100%;
+    align-items: start;
+}
+
+.fatex-aspect-group {
+    width: 100%;
+    height: fit-content;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fatex-aspect-group {
+    min-width: 0;
+    height: fit-content;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fatex-aspect-group.is-hidden {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.fatex-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 5px 5px 0 0;
+    cursor: grab;
+}
+
+.fatex-group-header:active {
+    cursor: grabbing;
+}
+
+.fatex-group-header .group-label {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: #555;
+}
+
+.fatex-group-header .group-label:focus {
+    background: rgba(255, 255, 255, 0.5);
+    outline: none;
+}
+
+.group-actions {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: #7a7971;
+}
+
+.group-actions i {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.group-actions i:hover {
+    color: #000;
+}
+
+.group-actions .group-delete:hover {
+    color: #ff0000;
+}
+
+.group-actions .group-visibility:hover {
+    color: #1a75ff;
+}
+
+.fatex-group-content {
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.create-group, .manage-tags {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.create-group:hover, .manage-tags:hover {
+    text-shadow: 0 0 5px rgba(0,0,0,0.2);
+}

@@ -1,0 +1,606 @@
+
+body.fatex-dark-mode {
+    --fx-dark-bg-app: #1e1e1e;
+    --fx-dark-bg-panel: #252526;
+    --fx-dark-bg-header: #2f3542; 
+    --fx-dark-bg-input: #2d2d2d;
+    --fx-dark-bg-element: #383838;
+    
+    --fx-dark-text-main: #f5f5f5;
+    --fx-dark-text-muted: #cccccc;
+    --fx-dark-text-header: #ffffff;
+    
+    --fx-dark-accent: #ffffff;
+    --fx-dark-border: rgba(255, 255, 255, 0.1);
+    --fx-dark-border-light: rgba(255, 255, 255, 0.2);
+    
+    --fx-dark-bg-glass: rgba(30, 30, 30, 0.75);
+    --fx-dark-bg-panel-glass: rgba(37, 37, 38, 0.75);
+}
+
+body.fatex-dark-mode .window-app {
+    background: var(--fx-dark-bg-glass) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--fx-dark-border) !important;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5) !important;
+}
+
+body.fatex-dark-mode .window-app .window-header,
+body.fatex-dark-mode .fatex-header {
+    background: var(--fx-dark-bg-header) !important;
+    border-bottom: 1px solid var(--fx-dark-border) !important;
+    color: var(--fx-dark-text-header) !important;
+    padding: 4px 8px !important;
+}
+
+body.fatex-dark-mode .window-app .window-title {
+    text-shadow: none !important;
+    font-weight: 600 !important;
+    color: var(--fx-dark-text-header) !important;
+}
+
+body.fatex-dark-mode .window-content,
+body.fatex-dark-mode .fatex-desk {
+    background: transparent !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-desk__sidebar {
+    background: var(--fx-dark-bg-panel-glass) !important;
+    border-left: 1px solid var(--fx-dark-border) !important;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1) !important;
+}
+
+body.fatex-dark-mode .fatex-headline,
+body.fatex-dark-mode .fatex-section-heading {
+    background: var(--fx-dark-bg-header) !important;
+    border: none !important; 
+    margin-bottom: 8px !important;
+    padding: 2px 5px !important;
+    position: relative;
+}
+
+body.fatex-dark-mode .fatex-headline__text,
+body.fatex-dark-mode .fatex-section-heading h2 {
+    color: #ffffff !important; 
+    font-weight: bold !important;
+    text-shadow: none !important;
+    margin: 0 !important;
+}
+
+body.fatex-dark-mode .fatex-headline::after,
+body.fatex-dark-mode .fatex-section-heading::after,
+body.fatex-dark-mode .fatex-artwork__wrapper::after,
+body.fatex-dark-mode .fatex-desk__sidebar .fatex-headline::after {
+    display: none !important;
+}
+
+body.fatex-dark-mode .fatex-headline,
+body.fatex-dark-mode .fatex-section-heading,
+body.fatex-dark-mode .fatex-artwork__wrapper {
+    background: transparent !important;
+    border: none !important;
+    clip-path: none !important;
+    position: relative !important;
+    z-index: 0 !important; 
+    overflow: visible !important; 
+}
+
+body.fatex-dark-mode .fatex-headline::before,
+body.fatex-dark-mode .fatex-section-heading::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: var(--fx-dark-bg-header) !important;
+    clip-path: polygon(
+        16px 0, 
+        100% 0, 
+        100% calc(100% - 16px), 
+        calc(100% - 16px) 100%, 
+        0 100%, 
+        0 16px
+    ) !important;
+    border: none !important;
+    z-index: -1 !important; 
+}
+
+body.fatex-dark-mode .fatex-artwork__wrapper::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    
+    background: var(--fx-dark-bg-header) !important; 
+    clip-path: polygon(
+        26px 0, 
+        100% 0, 
+        100% calc(100% - 26px), 
+        calc(100% - 26px) 100%, 
+        0 100%, 
+        0 26px
+    ) !important;
+    border: none !important;
+    z-index: -1 !important;
+}
+
+body.fatex-dark-mode .fatex-desk__sidebar .fatex-headline::before {
+    background: var(--fx-dark-bg-header) !important;
+}
+
+
+body.fatex-dark-mode .fatex-tabs-navigation__item::after,
+body.fatex-dark-mode .fatex-tabs-navigation__item.active::after,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a::after,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a.active::after {
+    display: block !important;
+    border-top-color: var(--fx-dark-bg-glass) !important;
+    border-bottom-color: transparent !important;
+}
+
+
+
+body.fatex-dark-mode .fatex-headline,
+body.fatex-dark-mode .fatex-section-heading {
+    clip-path: none !important; 
+    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+    position: relative !important;
+    z-index: 0 !important;
+    padding: 2px 5px !important;
+    margin-bottom: 8px !important;
+}
+
+body.fatex-dark-mode .fatex-artwork__wrapper {
+    
+    clip-path: polygon(
+        26px 0, 
+        100% 0, 
+        100% calc(100% - 26px), 
+        calc(100% - 26px) 100%, 
+        0 100%, 
+        0 26px
+    ) !important;
+}
+
+body.fatex-dark-mode .fatex-actions__icon {
+    color: var(--fx-dark-text-muted) !important;
+    transition: color 0.2s;
+}
+body.fatex-dark-mode .fatex-actions__icon:hover {
+    color: var(--fx-dark-accent) !important;
+}
+
+body.fatex-dark-mode label,
+body.fatex-dark-mode .fatex-text-input__label,
+body.fatex-dark-mode .fatex-text-input__icon,
+body.fatex-dark-mode .fatex-checkbox__label,
+body.fatex-dark-mode h1, 
+body.fatex-dark-mode h2, 
+body.fatex-dark-mode h3, 
+body.fatex-dark-mode h4, 
+body.fatex-dark-mode h5, 
+body.fatex-dark-mode h6 {
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-text-input__label {
+    color: var(--fx-dark-text-muted) !important;
+}
+
+body.fatex-dark-mode .fatex-text-input__icon {
+    background: transparent !important;
+}
+
+body.fatex-dark-mode input[type="text"],
+body.fatex-dark-mode input[type="number"],
+body.fatex-dark-mode select,
+body.fatex-dark-mode textarea,
+body.fatex-dark-mode .fatex-text-input {
+    background: rgba(0, 0, 0, 0.2) !important;
+    color: var(--fx-dark-text-main) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 4px !important;
+    padding: 6px 8px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    min-height: 30px !important; 
+}
+
+body.fatex-dark-mode input:focus,
+body.fatex-dark-mode textarea:focus,
+body.fatex-dark-mode select:focus,
+body.fatex-dark-mode .fatex-text-input:focus {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1) !important;
+    outline: none !important;
+}
+
+body.fatex-dark-mode button {
+    background: var(--fx-dark-bg-element) !important;
+    color: var(--fx-dark-text-main) !important;
+    border: 1px solid var(--fx-dark-border) !important;
+    box-shadow: var(--fx-shadow-soft) !important;
+    border-radius: 3px !important;
+    transition: all 0.2s ease !important;
+}
+
+body.fatex-dark-mode button:hover {
+    background: var(--fx-dark-border-light) !important;
+    color: #fff !important;
+    border-color: var(--fx-dark-text-muted) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspect,
+body.fatex-dark-mode .fatex-aspect-group {
+    background: var(--fx-dark-bg-element) !important;
+    
+    border-top: 1px solid var(--fx-dark-border) !important;
+    border-right: 1px solid var(--fx-dark-border) !important;
+    border-bottom: 1px solid var(--fx-dark-border) !important;
+    border-radius: 4px !important;
+    box-shadow: var(--fx-shadow-soft) !important;
+    margin-bottom: 0 !important;
+}
+
+body.fatex-dark-mode .fatex-row-main .aspect-name {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 4px !important;
+    color: var(--fx-dark-text-main) !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+body.fatex-dark-mode .fatex-row-main .aspect-name:focus {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1) !important;
+    outline: none !important;
+}
+
+body.fatex-dark-mode .fatex-group-header {
+    background: var(--fx-dark-bg-panel) !important;
+    border-bottom: 1px solid var(--fx-dark-border) !important;
+    border-radius: 4px 4px 0 0 !important;
+}
+
+body.fatex-dark-mode .fatex-group-header .group-label {
+    color: var(--fx-dark-text-muted) !important;
+    font-weight: 600 !important;
+}
+
+body.fatex-dark-mode .aspect-tag-pill {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+body.fatex-dark-mode .invoke-counter.hostile {
+    background: rgba(255, 0, 0, 0.2) !important;
+    color: #ff6b6b !important;
+    border: 1px solid rgba(255, 107, 107, 0.3) !important;
+}
+
+body.fatex-dark-mode .invoke-counter.hostile .invoke-control:hover {
+    color: #ffffff !important;
+}
+
+body.fatex-dark-mode .fatex-item-grid .fatex-headline__text,
+body.fatex-dark-mode .fatex-skill .fatex-headline__text,
+body.fatex-dark-mode .fatex__stunt .fatex-headline__text {
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-item-description,
+body.fatex-dark-mode .fatex-item-description p,
+body.fatex-dark-mode .fatex-item-description li,
+body.fatex-dark-mode .fatex-item-description div {
+    color: var(--fx-dark-text-muted) !important;
+}
+
+body.fatex-dark-mode .fatex-item-description strong,
+body.fatex-dark-mode .fatex-item-description b {
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode #chat-log .chat-message,
+body.fatex-dark-mode .chat-message {
+    background: var(--fx-dark-bg-panel) !important;
+    background-image: none !important;
+    border: 1px solid var(--fx-dark-border) !important;
+    padding: 0 !important;
+    box-shadow: var(--fx-shadow-soft) !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .chat-message .message-content {
+    background: transparent !important;
+    background-image: none !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .chat-message .message-header {
+    background: var(--fx-dark-bg-header) !important;
+    color: var(--fx-dark-text-muted) !important;
+    border-bottom: 1px solid var(--fx-dark-border) !important;
+    padding: 4px 8px !important;
+}
+
+body.fatex-dark-mode .fatex-headline--chat {
+    background: var(--fx-dark-bg-header) !important;
+    border: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    position: relative !important;
+    padding: 10px 5px !important; 
+    min-height: 32px !important; 
+    align-items: center !important;
+}
+
+body.fatex-dark-mode .fatex-headline--chat .fatex-headline__text {
+    color: #ffffff !important;
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body.fatex-dark-mode .fatex-headline--chat .fatex-headline__icon {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    left: auto !important;
+    margin: 0 !important;
+}
+
+body.fatex-dark-mode .fatex-headline--chat::before {
+    border-top-color: var(--fx-dark-bg-app) !important;
+}
+
+body.fatex-dark-mode .fatex-headline--chat::after {
+    border-bottom-color: var(--fx-dark-bg-app) !important;
+}
+
+body.fatex-dark-mode .fatex-item-card {
+    background: var(--fx-dark-bg-app) !important;
+    border: 1px solid var(--fx-dark-border) !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-rollWrapper {
+    padding: 5px !important;
+    background: var(--fx-dark-bg-app) !important; 
+    background-image: none !important;
+    border: 1px solid var(--fx-dark-border) !important;
+    border-top: none !important;
+    border-radius: 0 0 4px 4px !important;
+}
+
+body.fatex-dark-mode .fatex-roll {
+    background: transparent !important; 
+    border: none !important; 
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+body.fatex-dark-mode .fatex-chat {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+body.fatex-dark-mode .fatex-roll__total {
+    color: #fff !important;
+    text-shadow: 0 0 10px rgba(255,255,255,0.1) !important;
+}
+
+body.fatex-dark-mode .fatex-roll__ladder {
+    color: var(--fx-dark-text-muted) !important;
+}
+
+body.fatex-dark-mode .fatex-dice {
+    background: transparent !important; 
+    color: #ffffff !important;
+    border-radius: 0 !important;
+}
+
+body.fatex-dark-mode .fatex-dice div {
+    color: #ffffff !important;
+}
+
+body.fatex-dark-mode #chat-form textarea {
+    background: var(--fx-dark-bg-input) !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item {
+    color: var(--fx-dark-text-muted) !important;
+    border-bottom: 2px solid transparent !important;
+    transition: all 0.2s !important;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item:hover {
+    color: var(--fx-dark-text-main) !important;
+    text-shadow: 0 0 5px rgba(255,255,255,0.1) !important;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item.active {
+    color: var(--fx-dark-accent) !important;
+    border-bottom-color: var(--fx-dark-accent) !important;
+}
+
+
+body.fatex-dark-mode .fatex-tabs-navigation__item,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a {
+    position: relative !important;
+    z-index: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item::after,
+body.fatex-dark-mode .fatex-tabs-navigation__item.active::after,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a::after,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a.active::after {
+    display: none !important;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item::before,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: var(--fx-dark-bg-glass) !important;
+    z-index: -1 !important;
+    
+    clip-path: polygon(
+        8px 0, 
+        100% 0, 
+        100% calc(100% - 8px), 
+        calc(100% - 8px) 100%, 
+        0 100%, 
+        0 8px
+    ) !important;
+    
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item:hover::before,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a:hover::before {
+    opacity: 1 !important;
+}
+
+body.fatex-dark-mode .fatex-tabs-navigation__item.active::before,
+body.fatex-dark-mode .fatex__actor_group__sheet__navigation a.active::before {
+    background: var(--fx-dark-bg-header) !important;
+    opacity: 1 !important;
+}
+body.fatex-dark-mode .fatex-headline,
+body.fatex-dark-mode .fatex-section-heading {
+    background: transparent !important; 
+    border: none !important;
+    margin-bottom: 8px !important;
+    padding: 2px 5px !important;
+    position: relative;
+    z-index: 0 !important; 
+    overflow: visible !important; 
+    clip-path: none !important; 
+}
+
+body.fatex-dark-mode .fatex-headline::before,
+body.fatex-dark-mode .fatex-section-heading::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--fx-dark-bg-header) !important;
+    z-index: -1 !important; 
+    
+    clip-path: polygon(
+        16px 0, 
+        100% 0, 
+        100% calc(100% - 16px), 
+        calc(100% - 16px) 100%, 
+        0 100%, 
+        0 16px
+    ) !important;
+    
+    border: none !important;
+}
+
+body.fatex-dark-mode .fatex-headline::after,
+body.fatex-dark-mode .fatex-section-heading::after {
+    display: none !important;
+}
+
+body.fatex-dark-mode .fatex-headline__text,
+body.fatex-dark-mode .fatex-section-heading h2 {
+    color: #ffffff !important;
+    font-weight: bold !important;
+    text-shadow: none !important;
+    margin: 0 !important;
+    padding-left: 25px !important; 
+    padding-right: 0 !important; 
+}
+
+body.fatex-dark-mode .fatex-headline__icon {
+    z-index: 100 !important;
+    opacity: 1 !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-headline__icon {
+    transform: none !important; 
+    z-index: 100 !important;
+    display: block !important;
+    opacity: 1 !important;
+    right: auto !important;
+    left: 100% !important; 
+    margin-left: -25px !important; 
+}
+
+body.fatex-dark-mode .dialog .dialog-content {
+    background: var(--fx-dark-bg-app) !important;
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .dialog .dialog-buttons button {
+    background: var(--fx-dark-bg-element) !important;
+    border: 1px solid var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .editor-content {
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .editor-menu {
+    background: var(--fx-dark-bg-panel) !important;
+    border-bottom: 1px solid var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .fatex-js-edit-mode .fatex-actions--section-heading {
+    background: linear-gradient(90deg, transparent 0%, var(--fx-dark-bg-glass) 33%, var(--fx-dark-bg-glass) 100%) !important;
+}
+
+body.fatex-dark-mode .fatex-js-edit-mode .fatex-actions--item {
+    background: linear-gradient(90deg, transparent 0%, var(--fx-dark-bg-glass) 33%, var(--fx-dark-bg-glass) 100%) !important;
+}
+
+body.fatex-dark-mode .fatex-headline__icon--skill {
+    left: 13px !important;
+    right: auto !important;
+    top: -4px !important;
+    transform: none !important;
+    padding: 0 !important;
+    z-index: 100 !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+    position: absolute !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspect.drag-left,
+body.fatex-dark-mode .fatex-scene-aspect.drag-right,
+body.fatex-dark-mode .fatex-aspect-group.drag-left,
+body.fatex-dark-mode .fatex-aspect-group.drag-right {
+    border-color: rgba(255, 255, 255, 0.1) !important; 
+    --color-shadow-primary: #ffffff;
+}
+
+body.fatex-dark-mode .fatex-cost-description {
+    color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode select {
+    position: relative !important;
+    z-index: 1000 !important; 
+}
+body.fatex-dark-mode option {
+    background: var(--fx-dark-bg-panel) !important;
+    color: var(--fx-dark-text-main) !important;
+}

@@ -1,0 +1,73 @@
+{
+    "FAx": {
+        "Global": {
+            "SceneAspects": "Aspects",
+            "ManageAspects": "Aspect Manager",
+            "Add": "Add Aspect",
+            "AspectName": "Aspect Name",
+            "Type": "Type",
+            "Game": "Game Aspect",
+            "Situation": "Situation Aspect",
+            "Boost": "Boost",
+            "Other": "Other",
+            "Invokes": "Free Invokes",
+            "HostileInvokes": "GM Invokes",
+            "NoAspects": "No scene aspects created yet.",
+            "AddCategory": "New Category",
+            "DeleteAspectTitle": "Delete Aspect",
+            "DeleteAspectConfirm": "Are you sure you want to delete this aspect?",
+            "Uncategorized": "Uncategorized",
+            "NewAspect": "New Aspect",
+            "NewCategory": "New Category",
+            "DeleteCategory": "Delete Category",
+            "DeleteCategoryConfirm": "Are you sure you want to delete this category and all its aspects?",
+            "AspectStorageNotAvailable": "Aspect Storage not available. Ask GM to initialize.",
+            "AspectAlreadyHasTag": "This aspect already has this tag.",
+            "ManageTags": "Manage Tag Definitions",
+            "Save": "Save Changes",
+            "NewTag": "New Tag",
+            "TagName": "Tag Name",
+            "CreateNewTag": "Create New Tag",
+            "Color": "Color:",
+            "AddTag": "Add Tag",
+            "CreateAndAdd": "Create & Add",
+            "Tags": "Tags",
+            "Category": "Category",
+            "PickExistingTag": "Pick Existing Tag",
+            "GlobalAspectsJournalName": "Global FateX Aspects",
+            "CannotDeleteStorage": "FateX Extras: This Journal Entry stores the Global Aspects and cannot be deleted manually.",
+            "Delete": "Delete"
+        },
+        "Dice": {
+            "SystemName": "FateX Extras"
+        },
+        "Settings": {
+            "DarkMode": "Enable Dark Mode",
+            "DarkModeHint": "Enables a dark theme for all windows and sheets."
+        },
+        "NewSession": {
+            "Title": "Start New Session",
+            "Question": "Ready to start a new session? This will refresh Fate Points for this character.",
+            "Confirm": "Yes",
+            "Cancel": "No",
+            "Success": "New Session: Refreshed Fate Points for {name}.",
+            "AlreadyFull": "{name} is already at or above their Refresh."
+        },
+        "CostDialog": {
+            "Title": "Pay Cost",
+            "Description": "How would you like to pay for this action?",
+            "PayFatePoint": "Pay Fate Point",
+            "Current": "Current",
+            "UseFreeInvoke": "Use Free Invoke",
+            "Free": "Free (No Cost)",
+            "PayAndProceed": "Pay & Proceed",
+            "Cancel": "Cancel",
+            "Consequence": "Consequence",
+            "Aspect": "Aspect"
+        },
+        "RollHistory": {
+            "Added": "added {amount}",
+            "Rerolled": "rerolled (was {previous})"
+        }
+    }
+}

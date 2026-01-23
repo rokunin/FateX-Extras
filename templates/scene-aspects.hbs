@@ -1,0 +1,95 @@
+<form class="fatex-desk fatex-scene-aspects">
+    <header class="fatex-header">
+        <div class="fatex-header__name">
+            <label class="fatex-header__label">{{localize "FAx.Global.SceneAspects"}}</label>
+            <div class="fatex-header__title">{{localize "FAx.Global.ManageAspects"}}</div>
+        </div>
+        <div class="fatex-header__actions">
+            <button type="button" class="manage-tags" title="{{localize 'FAx.Global.ManageTags'}}"><i class="fas fa-tags"></i> {{localize 'FAx.Global.Tags'}}</button>
+            <button type="button" class="create-group"><i class="fas fa-folder-plus"></i> {{localize 'FAx.Global.Category'}}</button>
+        </div>
+    </header>
+
+    <div class="fatex-desk__content">
+            <div class="fatex-desk__aspects">
+            {{#each groups}}
+            <div class="fatex-aspect-group {{#if this.hidden}}is-hidden{{/if}}" data-group-id="{{this.id}}">
+                <header class="fatex-group-header" draggable="true" data-group-id="{{this.id}}">
+                    <input type="text" class="group-label" value="{{this.label}}" data-group-id="{{this.id}}" />
+                    <div class="group-actions">
+                        {{#if ../isGM}}
+                        <i class="fas {{#if this.hidden}}fa-eye-slash{{else}}fa-eye{{/if}} group-visibility" data-group-id="{{this.id}}" title="Toggle Visibility"></i>
+                        {{/if}}
+                        <i class="fas fa-plus create-aspect" data-group-id="{{this.id}}" title="{{localize 'FAx.Global.Add'}}"></i>
+                        <i class="fas fa-trash group-delete" data-group-id="{{this.id}}" title="{{localize 'FAx.Global.Delete'}}"></i>
+                    </div>
+                </header>
+
+
+                <div class="fatex-group-content">
+                    {{#each this.aspects}}
+                    <div class="fatex-item fatex-scene-aspect {{#if this.hidden}}is-hidden{{/if}}" data-id="{{this.id}}" draggable="true" style="border-left: 6px solid {{this.color}}">
+                        
+                        <input type="color" class="aspect-color-trigger" value="{{this.color}}" data-id="{{this.id}}" data-field="color">
+                        
+                        <div class="fatex-u-pos-relative">
+                            
+                            
+                            <div class="fatex-row-main">
+                                <textarea class="fatex-text-input aspect-name" 
+                                          placeholder="{{localize 'FAx.Global.AspectName'}}"
+                                          data-id="{{this.id}}" 
+                                          data-field="name"
+                                          rows="1">{{this.name}}</textarea>
+                            </div>
+
+                            
+                            <div class="aspect-tags-list">
+                                {{#each this.displayTags}}
+                                <span class="aspect-tag-pill" draggable="true" data-id="{{../id}}" data-tag-id="{{this.id}}" style="background-color: {{this.color}}">
+                                    {{this.label}}
+                                    <i class="fas fa-times aspect-tag-remove" data-id="{{../id}}" data-tag-id="{{this.id}}"></i>
+                                </span>
+                                {{/each}}
+                                <button type="button" class="add-tag-to-aspect" data-id="{{this.id}}"><i class="fas fa-plus"></i></button>
+                            </div>
+
+                            
+                            <div class="fatex-row-details">
+                                <div class="aspect-invokes-wrapper">
+                                    <label class="fatex-text-input__label">{{localize "FAx.Global.Invokes"}}</label>
+                                    <div class="invoke-counter">
+                                        <i class="fas fa-minus invoke-control" data-action="decrease" data-field="invokes" data-id="{{this.id}}"></i>
+                                        <span class="invoke-value">{{this.invokes}}</span>
+                                        <i class="fas fa-plus invoke-control" data-action="increase" data-field="invokes" data-id="{{this.id}}"></i>
+                                    </div>
+                                </div>
+
+                                <div class="aspect-invokes-wrapper">
+                                    <label class="fatex-text-input__label">{{localize "FAx.Global.HostileInvokes"}}</label>
+                                    <div class="invoke-counter hostile">
+                                        <i class="fas fa-minus invoke-control" data-action="decrease" data-field="hostileInvokes" data-id="{{this.id}}"></i>
+                                        <span class="invoke-value">{{#if this.hostileInvokes}}{{this.hostileInvokes}}{{else}}0{{/if}}</span>
+                                        <i class="fas fa-plus invoke-control" data-action="increase" data-field="hostileInvokes" data-id="{{this.id}}"></i>
+                                    </div>
+                                </div>
+
+                                <div class="aspect-actions-wrapper">
+                                <div class="aspect-item-actions">
+                                    {{#if isGM}}
+                                    <i class="fas {{#if this.hidden}}fa-eye-slash{{else}}fa-eye{{/if}} aspect-visibility" data-id="{{this.id}}" title="Toggle Visibility"></i>
+                                    {{/if}}
+                                    <i class="fas fa-trash aspect-delete" data-id="{{this.id}}"></i>
+                                </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</form>

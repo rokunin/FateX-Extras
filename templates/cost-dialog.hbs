@@ -1,0 +1,164 @@
+<form class="fatex-cost-dialog fatex-dialog-theme">
+    <div class="fatex-header">
+        <h3 class="fatex-header__text">{{localize "FAx.CostDialog.Title"}}</h3>
+    </div>
+
+    <p class="fatex-cost-description">{{localize "FAx.CostDialog.Description"}}</p>
+    
+    <div class="fatex-cost-options">
+        <div class="fatex-cost-option {{#unless hasFatePoints}}disabled{{/unless}}">
+            <label>
+                <input type="radio" name="cost-type" value="fatepoint" {{#unless hasFatePoints}}disabled{{/unless}} checked>
+                <span class="fatex-cost-label">{{localize "FAx.CostDialog.PayFatePoint"}}</span>
+                <span class="fatex-cost-info">({{localize "FAx.CostDialog.Current"}}: {{fatePoints}})</span>
+            </label>
+        </div>
+
+        <div class="fatex-cost-option {{#unless hasAspects}}disabled{{/unless}}">
+            <label>
+                <input type="radio" name="cost-type" value="aspect" {{#unless hasAspects}}disabled{{/unless}}>
+                <span class="fatex-cost-label">{{localize "FAx.CostDialog.UseFreeInvoke"}}</span>
+            </label>
+            <input type="hidden" name="aspect-select" value="0">
+            <div class="fatex-select-custom disabled">
+                {{#each aspects as |option index|}}
+                    <div class="fatex-select-option {{#if @first}}selected{{/if}}" data-value="{{index}}">{{option.name}}</div>
+                {{/each}}
+            </div>
+        </div>
+
+        <div class="fatex-cost-option">
+            <label>
+                <input type="radio" name="cost-type" value="free">
+                <span class="fatex-cost-label">{{localize "FAx.CostDialog.Free"}}</span>
+            </label>
+        </div>
+    </div>
+    
+    <style>
+        .fatex-dialog-theme {
+            font-family: "Montserrat", sans-serif;
+            color: var(--fatex-primary-text-color, #191813);
+        }
+        .fatex-cost-dialog {
+            padding: 10px;
+            
+            transition: height 0.3s ease; 
+        }
+        .fatex-cost-description {
+            margin-bottom: 15px;
+            font-style: italic;
+            text-align: center;
+        }
+        .fatex-cost-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .fatex-cost-option {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .fatex-cost-option:hover:not(.disabled) {
+            background: rgba(0, 0, 0, 0.1);
+            border-color: #2f3542;
+        }
+        .fatex-cost-option.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .fatex-cost-option label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .fatex-cost-label {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .fatex-cost-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        body.fatex-dark-mode .fatex-select-custom {
+            background: rgba(30, 30, 30, 0.75); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body.fatex-dark-mode .fatex-select-option {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        body.fatex-dark-mode .fatex-select-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        body.fatex-dark-mode .fatex-select-option.selected {
+            background: rgba(47, 53, 66, 0.9); 
+            color: #ffffff;
+            font-weight: bold;
+        }
+        
+        .fatex-select-custom {
+            margin-left: 25px;
+            width: calc(100% - 25px);
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            background: rgba(255,255,255,0.5);
+            
+            
+            max-height: 200px;
+            margin-top: 5px;
+            opacity: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .fatex-select-custom.disabled {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+            border-width: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .fatex-select-option {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.9em;
+            line-height: 1.3;
+        }
+        .fatex-select-option:last-child {
+            border-bottom: none;
+        }
+        .fatex-select-option:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        .fatex-select-option.selected {
+            background: #2f3542;
+            color: #fff;
+        }
+        
+        .fatex-header {
+            background: #2f3542;
+            color: #fff;
+            padding: 10px;
+            margin: -10px -10px 10px -10px;
+            border-radius: 3px 3px 0 0;
+            display: flex;
+            justify-content: center;
+        }
+        .fatex-header__text {
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 16px;
+            border: none;
+        }
+    </style>
+</form>
