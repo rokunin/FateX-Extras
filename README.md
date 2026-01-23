@@ -1,6 +1,6 @@
 # FateX Extras
 
-**FateX Extras** is a comprehensive module for the [FateX system](https://foundryvtt.com/packages/fatex) in Foundry VTT. It enhances the gameplay experience by adding a robust Scene Aspect Manager, automated subtractions for invokes/rerolls, global aspect tracking, and various quality-of-life improvements.
+**FateX Extras** is a comprehensive module for the [FateX system](https://github.com/anvil-vtt/FateX) in Foundry VTT. It enhances the gameplay experience by adding a robust Scene Aspect Manager, automated subtractions for invokes/rerolls, global aspect tracking, and various quality-of-life improvements.
 
 ![Foundry Version](https://img.shields.io/badge/Foundry-v13-orange) ![Downloads](https://img.shields.io/github/downloads/shradee/FateX-Extras/total)  ![Language](https://img.shields.io/badge/Language-English%20%7C%20Russian-green)
 
