@@ -2,7 +2,9 @@
 
 **FateX Extras** is a comprehensive module for the [FateX system](https://foundryvtt.com/packages/fatex) in Foundry VTT. It enhances the gameplay experience by adding a robust Scene Aspect Manager, automated subtractions for invokes/rerolls, global aspect tracking, and various quality-of-life improvements.
 
-![FateX Extras Banner](https://img.shields.io/badge/Foundry%20VTT-v13%2B-blue) ![Language](https://img.shields.io/badge/Language-English%20%7C%20Russian-green)
+![Foundry Version](https://img.shields.io/badge/Foundry-v13-orange) ![Downloads](https://img.shields.io/github/downloads/shradee/card-deck-initiative/total)  ![Language](https://img.shields.io/badge/Language-English%20%7C%20Russian-green)
+
+[![Support modules I create on](https://img.shields.io/badge/Support_modules_I_create_on-Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/shrade_himself)
 
 ## Features
 
@@ -62,4 +64,5 @@ The module includes full localization for:
 
 ## Credits
 Built to extend the amazing [FateX system](https://github.com/anvil-vtt/FateX).
+
 [3D model of a fate point](https://cults3d.com/en/3d-model/game/fate-point-tokens)
