@@ -234,8 +234,8 @@ body.fatex-dark-mode button:hover {
     border-color: var(--fx-dark-text-muted) !important;
 }
 
-body.fatex-dark-mode .fatex-scene-aspect,
-body.fatex-dark-mode .fatex-aspect-group {
+body.fatex-dark-mode .fatex-scene-aspects .fatex-scene-aspect,
+body.fatex-dark-mode .fatex-scene-aspects .fatex-aspect-group {
     background: var(--fx-dark-bg-element) !important;
     
     border-top: 1px solid var(--fx-dark-border) !important;
@@ -246,7 +246,7 @@ body.fatex-dark-mode .fatex-aspect-group {
     margin-bottom: 0 !important;
 }
 
-body.fatex-dark-mode .fatex-row-main .aspect-name {
+body.fatex-dark-mode .fatex-scene-aspects .fatex-row-main .aspect-name {
     background: rgba(0, 0, 0, 0.2) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 4px !important;
@@ -255,36 +255,36 @@ body.fatex-dark-mode .fatex-row-main .aspect-name {
     transition: all 0.2s ease !important;
 }
 
-body.fatex-dark-mode .fatex-row-main .aspect-name:focus {
+body.fatex-dark-mode .fatex-scene-aspects .fatex-row-main .aspect-name:focus {
     background: rgba(0, 0, 0, 0.3) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.1) !important;
     outline: none !important;
 }
 
-body.fatex-dark-mode .fatex-group-header {
+body.fatex-dark-mode .fatex-scene-aspects .fatex-group-header {
     background: var(--fx-dark-bg-panel) !important;
     border-bottom: 1px solid var(--fx-dark-border) !important;
     border-radius: 4px 4px 0 0 !important;
 }
 
-body.fatex-dark-mode .fatex-group-header .group-label {
+body.fatex-dark-mode .fatex-scene-aspects .fatex-group-header .group-label {
     color: var(--fx-dark-text-muted) !important;
     font-weight: 600 !important;
 }
 
-body.fatex-dark-mode .aspect-tag-pill {
+body.fatex-dark-mode .fatex-scene-aspects .aspect-tag-pill {
     box-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
 }
 
-body.fatex-dark-mode .invoke-counter.hostile {
+body.fatex-dark-mode .fatex-scene-aspects .invoke-counter.hostile {
     background: rgba(255, 0, 0, 0.2) !important;
     color: #ff6b6b !important;
     border: 1px solid rgba(255, 107, 107, 0.3) !important;
 }
 
-body.fatex-dark-mode .invoke-counter.hostile .invoke-control:hover {
+body.fatex-dark-mode .fatex-scene-aspects .invoke-counter.hostile .invoke-control:hover {
     color: #ffffff !important;
 }
 
@@ -584,10 +584,10 @@ body.fatex-dark-mode .fatex-headline__icon--skill {
     position: absolute !important;
 }
 
-body.fatex-dark-mode .fatex-scene-aspect.drag-left,
-body.fatex-dark-mode .fatex-scene-aspect.drag-right,
-body.fatex-dark-mode .fatex-aspect-group.drag-left,
-body.fatex-dark-mode .fatex-aspect-group.drag-right {
+body.fatex-dark-mode .fatex-scene-aspects .fatex-scene-aspect.drag-left,
+body.fatex-dark-mode .fatex-scene-aspects .fatex-scene-aspect.drag-right,
+body.fatex-dark-mode .fatex-scene-aspects .fatex-aspect-group.drag-left,
+body.fatex-dark-mode .fatex-scene-aspects .fatex-aspect-group.drag-right {
     border-color: rgba(255, 255, 255, 0.1) !important; 
     --color-shadow-primary: #ffffff;
 }

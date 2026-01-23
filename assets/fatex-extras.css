@@ -171,7 +171,7 @@
     background: rgba(0,0,0,0.1);
 }
 
-.fatex-scene-aspect {
+.fatex-scene-aspects .fatex-scene-aspect {
     flex: 1 1 300px;
     position: relative;
     margin-bottom: 0;
@@ -184,15 +184,15 @@
     max-width: 100%;
 }
 
-.fatex-scene-aspect:hover {
+.fatex-scene-aspects .fatex-scene-aspect:hover {
     box-shadow: inset 6px 0 0 rgba(255,255,255,0.2);
 }
 
-.fatex-scene-aspect:active {
+.fatex-scene-aspects .fatex-scene-aspect:active {
     cursor: grabbing;
 }
 
-.aspect-color-trigger {
+.fatex-scene-aspects .aspect-color-trigger {
     position: absolute;
     top: 0;
     left: -6px;
@@ -206,27 +206,27 @@
     z-index: 10;
 }
 
-.fatex-scene-aspect.drag-left {
+.fatex-scene-aspects .fatex-scene-aspect.drag-left {
     box-shadow: -4px 0 0 var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2);
 }
 
-.fatex-scene-aspect.drag-right {
+.fatex-scene-aspects .fatex-scene-aspect.drag-right {
     box-shadow: 4px 0 0 var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2);
 }
 
-.fatex-aspect-group.drag-left {
+.fatex-scene-aspects .fatex-aspect-group.drag-left {
     box-shadow: -4px 0 0 var(--color-shadow-primary, #ff6400), 0 0 5px rgba(0,0,0,0.2);
 }
 
-.fatex-aspect-group.drag-right {
+.fatex-scene-aspects .fatex-aspect-group.drag-right {
     box-shadow: 4px 0 0 var(--color-shadow-primary, #ff6400), 0 0 5px rgba(0,0,0,0.2);
 }
 
-.fatex-row-main {
+.fatex-scene-aspects .fatex-row-main {
     margin-bottom: 8px;
 }
 
-.fatex-row-main .aspect-name {
+.fatex-scene-aspects .fatex-row-main .aspect-name {
     width: 100%;
     resize: none;
     overflow: hidden;
@@ -243,25 +243,25 @@
     display: block;
 }
 
-.fatex-row-main .aspect-name:focus {
+.fatex-scene-aspects .fatex-row-main .aspect-name:focus {
     background: rgba(255, 255, 255, 0.8);
     border-color: rgba(0, 0, 0, 0.3);
     outline: none;
 }
 
-.fatex-row-details {
+.fatex-scene-aspects .fatex-row-details {
     display: flex;
     gap: 15px;
     font-size: 12px;
 }
 
-.aspect-invokes-wrapper {
+.fatex-scene-aspects .aspect-invokes-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.invoke-counter {
+.fatex-scene-aspects .invoke-counter {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -271,31 +271,31 @@
     font-weight: bold;
 }
 
-.invoke-counter.hostile {
+.fatex-scene-aspects .invoke-counter.hostile {
     background: rgba(255, 0, 0, 0.1);
     color: #a00;
 }
 
-.invoke-counter.hostile .invoke-control:hover {
+.fatex-scene-aspects .invoke-counter.hostile .invoke-control:hover {
     color: #ff0000;
 }
 
-.invoke-control {
+.fatex-scene-aspects .invoke-control {
     cursor: pointer;
     font-size: 10px;
     opacity: 0.7;
 }
 
-.invoke-control:hover {
+.fatex-scene-aspects .invoke-control:hover {
     opacity: 1;
 }
 
-.invoke-value {
+.fatex-scene-aspects .invoke-value {
     min-width: 15px;
     text-align: center;
 }
 
-.aspect-actions-wrapper {
+.fatex-scene-aspects .aspect-actions-wrapper {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -305,7 +305,7 @@
     z-index: 5;
 }
 
-.aspect-item-actions {
+.fatex-scene-aspects .aspect-item-actions {
     height: 32px;
     display: flex;
     align-items: center;
@@ -317,17 +317,18 @@
     color: #000;
 }
 
-.aspect-delete, .aspect-visibility {
+.fatex-scene-aspects .aspect-delete, 
+.fatex-scene-aspects .aspect-visibility {
     cursor: pointer;
     color: #7a7971;
     transition: color 0.2s;
 }
 
-.aspect-visibility:hover {
+.fatex-scene-aspects .aspect-visibility:hover {
     color: #1a75ff;
 }
 
-.aspect-item-actions {
+.fatex-scene-aspects .aspect-item-actions {
     height: 32px;
     display: flex;
     align-items: center;
@@ -335,18 +336,18 @@
     gap: 8px;
 }
 
-.fatex-scene-aspect.is-hidden {
+.fatex-scene-aspects .fatex-scene-aspect.is-hidden {
     opacity: 0.6;
     background: rgba(0, 0, 0, 0.1);
 }
 
 
-.aspect-delete:hover {
+.fatex-scene-aspects .aspect-delete:hover {
     color: #ff0000;
     text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
 }
 
-.fatex-desk__aspects {
+.fatex-scene-aspects .fatex-desk__aspects {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 10px;
@@ -354,7 +355,7 @@
     align-items: start;
 }
 
-.fatex-aspect-group {
+.fatex-scene-aspects .fatex-aspect-group {
     width: 100%;
     height: fit-content;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -364,7 +365,7 @@
     flex-direction: column;
 }
 
-.fatex-aspect-group {
+.fatex-scene-aspects .fatex-aspect-group {
     min-width: 0;
     height: fit-content;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -374,12 +375,12 @@
     flex-direction: column;
 }
 
-.fatex-aspect-group.is-hidden {
+.fatex-scene-aspects .fatex-aspect-group.is-hidden {
     opacity: 0.6;
     background: rgba(0, 0, 0, 0.05);
 }
 
-.fatex-group-header {
+.fatex-scene-aspects .fatex-group-header {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -390,11 +391,11 @@
     cursor: grab;
 }
 
-.fatex-group-header:active {
+.fatex-scene-aspects .fatex-group-header:active {
     cursor: grabbing;
 }
 
-.fatex-group-header .group-label {
+.fatex-scene-aspects .fatex-group-header .group-label {
     flex: 1;
     background: transparent;
     border: none;
@@ -404,36 +405,36 @@
     color: #555;
 }
 
-.fatex-group-header .group-label:focus {
+.fatex-scene-aspects .fatex-group-header .group-label:focus {
     background: rgba(255, 255, 255, 0.5);
     outline: none;
 }
 
-.group-actions {
+.fatex-scene-aspects .group-actions {
     display: flex;
     gap: 10px;
     font-size: 12px;
     color: #7a7971;
 }
 
-.group-actions i {
+.fatex-scene-aspects .group-actions i {
     cursor: pointer;
     transition: color 0.2s;
 }
 
-.group-actions i:hover {
+.fatex-scene-aspects .group-actions i:hover {
     color: #000;
 }
 
-.group-actions .group-delete:hover {
+.fatex-scene-aspects .group-actions .group-delete:hover {
     color: #ff0000;
 }
 
-.group-actions .group-visibility:hover {
+.fatex-scene-aspects .group-actions .group-visibility:hover {
     color: #1a75ff;
 }
 
-.fatex-group-content {
+.fatex-scene-aspects .fatex-group-content {
     padding: 10px;
     display: flex;
     flex-wrap: wrap;
