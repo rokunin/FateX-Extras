@@ -28,7 +28,7 @@ Intercepts standard roll actions to offer payment choices.
 ### 🎲 Enhanced Chat Rolls
 *   **Quick Modifiers:** Adds **+1** and **-1** buttons to chat cards for quick GM adjustments.
 *   **Permission Handling:** Allows players to modify their own rolls (e.g., spending invokes) even if they don't own the chat message document, via secure socket delegation.
-*   **Dice So Nice:** Includes a custom "dc" die preset with a dedicated !(3D model)[https://cults3d.com/en/3d-model/game/fate-point-tokens] for immersive rolling.
+*   **Dice So Nice:** Includes a custom "dc" die preset with a dedicated [3D model](https://cults3d.com/en/3d-model/game/fate-point-tokens) for immersive rolling.
 
 ### 🌓 Dark Mode
 A built-in dark theme for all module windows and sheets, perfect for late-night sessions.
@@ -62,3 +62,4 @@ The module includes full localization for:
 
 ## Credits
 Built to extend the amazing [FateX system](https://github.com/anvil-vtt/FateX).
+[3D model of a fate point](https://cults3d.com/en/3d-model/game/fate-point-tokens)
