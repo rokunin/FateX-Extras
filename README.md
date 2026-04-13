@@ -17,6 +17,7 @@ A powerful, drag-and-drop enabled interface for managing scene aspects.
 *   **Visibility:** Toggle visibility for individual aspects or entire categories (GM only).
 *   **Free Invokes:** Track free invokes directly on the aspect card.
 *   **GM Invokes:** Track hostile/GM invokes separately (visible only to GM).
+*   **Drag and Drop aspects on Canvas:** Simply take the aspect from the manager and put it on the scene.
 
 ### 💰 Cost Automation & Payment
 Intercepts standard roll actions to offer payment choices.
