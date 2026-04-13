@@ -426,6 +426,20 @@
     color: #000;
 }
 
+.fatex-scene-aspects .group-collapse {
+    cursor: pointer;
+    transition: color 0.2s;
+    color: #7a7971;
+}
+
+.fatex-scene-aspects .group-collapse:hover {
+    color: #000;
+}
+
+.fatex-scene-aspects .fatex-group-content.is-collapsed {
+    display: none;
+}
+
 .fatex-scene-aspects .group-actions .group-delete:hover {
     color: #ff0000;
 }

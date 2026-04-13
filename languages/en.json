@@ -36,14 +36,38 @@
             "PickExistingTag": "Pick Existing Tag",
             "GlobalAspectsJournalName": "Global FateX Aspects",
             "CannotDeleteStorage": "FateX Extras: This Journal Entry stores the Global Aspects and cannot be deleted manually.",
-            "Delete": "Delete"
+            "Delete": "Delete",
+            "Collapse": "Collapse",
+            "Expand": "Expand",
+            "DragToScene": "Drag to scene to create text note",
+            "AspectAddedToScene": "Added '{name}' to scene"
         },
         "Dice": {
             "SystemName": "FateX Extras"
         },
         "Settings": {
             "DarkMode": "Enable Dark Mode",
-            "DarkModeHint": "Enables a dark theme for all windows and sheets."
+            "DarkModeHint": "Enables a dark theme for all windows and sheets.",
+            "SceneDrawingFont": "Canvas Aspect Font",
+            "SceneDrawingFontHint": "Font used for aspect text on canvas",
+            "SceneDrawingBgAlpha": "Aspect Background Opacity",
+            "SceneDrawingBgAlphaHint": "Opacity of aspect background on canvas (0 = invisible, 1 = solid)",
+            "SceneDrawingShowTags": "Show Tags on Canvas",
+            "SceneDrawingShowTagsHint": "Display tags below aspect name on canvas",
+            "SceneDrawingShowHostile": "Show GM Invokes on Canvas",
+            "SceneDrawingShowHostileHint": "Display GM invokes counter on canvas",
+            "SceneDrawingShowInvokes": "Show Free Invokes on Canvas",
+            "SceneDrawingShowInvokesHint": "Display free invokes counter on canvas",
+            "SceneDrawingStrokeColor": "Aspect Frame Color",
+            "SceneDrawingStrokeColorHint": "Color of the aspect frame/border",
+            "SceneDrawingStrokeAlpha": "Aspect Frame Opacity",
+            "SceneDrawingStrokeAlphaHint": "Opacity of the aspect frame (0 = invisible, 1 = solid)",
+            "KoFiShown": "Support Message Shown"
+        },
+        "KoFi": {
+            "SupportMessage": "If you enjoy FateX Extras, consider supporting its development!",
+            "ShowMessage": "Show Ko-fi Support Message",
+            "ShowMessageHint": "Show support message when joining world"
         },
         "NewSession": {
             "Title": "Start New Session",

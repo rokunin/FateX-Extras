@@ -8,9 +8,9 @@
             "Type": "Тип",
             "Game": "Аспект игры",
             "Situation": "Ситуационный аспект",
-            "Boost": "Ускорение",
+            "Boost": "Усиление",
             "Other": "Другое",
-            "Invokes": "Бесплатные призывы",
+            "Invokes": "Призывы",
             "HostileInvokes": "Призывы ГМа",
             "NoAspects": "Аспекты сцены еще не созданы.",
             "AddCategory": "Новая категория",
@@ -43,7 +43,27 @@
         },
         "Settings": {
             "DarkMode": "Включить темный режим",
-            "DarkModeHint": "Включает темную тему для всех окон и листов."
+            "DarkModeHint": "Включает темную тему для всех окон и листов.",
+            "SceneDrawingFont": "Шрифт для аспектов на холсте",
+            "SceneDrawingFontHint": "Шрифт, используемый для надписей аспектов на холсте",
+            "SceneDrawingBgAlpha": "Прозрачность фона аспектов",
+            "SceneDrawingBgAlphaHint": "Прозрачность фона надписей аспектов на холсте (0 = невидимый, 1 = сплошной)",
+            "SceneDrawingShowTags": "Показывать теги аспектов",
+            "SceneDrawingShowTagsHint": "Отображать теги под названием аспекта на холсте",
+            "SceneDrawingShowHostile": "Показывать призывы ГМа",
+            "SceneDrawingShowHostileHint": "Отображать счетчик призывов ГМа на холсте",
+            "SceneDrawingShowInvokes": "Показывать призывы",
+            "SceneDrawingShowInvokesHint": "Отображать счетчик призывы на холсте",
+            "SceneDrawingStrokeColor": "Цвет рамки аспектов",
+            "SceneDrawingStrokeColorHint": "Цвет рамки надписей аспектов на холсте",
+            "SceneDrawingStrokeAlpha": "Прозрачность рамки",
+            "SceneDrawingStrokeAlphaHint": "Прозрачность рамки надписей аспектов (0 = невидимая, 1 = сплошная)",
+            "KoFiShown": "Сообщение о поддержке показано"
+        },
+        "KoFi": {
+            "SupportMessage": "Если вам нравится FateX Extras, рассмотрите возможность поддержки его разработки!",
+            "ShowMessage": "Показывать сообщение Ko-fi",
+            "ShowMessageHint": "Показывать сообщение о поддержке при входе в мир"
         },
         "NewSession": {
             "Title": "Начать новую сессию",

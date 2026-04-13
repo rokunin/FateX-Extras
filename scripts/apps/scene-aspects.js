@@ -74,6 +74,7 @@ export class SceneAspectsApp extends FormApplication {
         html.find(".group-label").on("change", (e) => this._onUpdateGroupLabel(e));
         html.find(".group-delete").on("click", (e) => this._onDeleteGroup(e));
         html.find(".group-visibility").on("click", (e) => this._onToggleGroupVisibility(e));
+        html.find(".group-collapse").on("click", (e) => this._onToggleGroupCollapse(e));
         html.find(".manage-tags").on("click", (e) => this._onManageTags(e));
         html.find(".aspect-color-trigger").on("change", (e) => this._onUpdateAspect(e));
         html.find(".create-aspect").on("click", (e) => this._onCreateAspect(e));
@@ -214,6 +215,13 @@ export class SceneAspectsApp extends FormApplication {
         if (group) { group.hidden = !group.hidden; await this._saveGroups(groups); }
     }
 
+    async _onToggleGroupCollapse(event) {
+        event.preventDefault();
+        const groups = await this._getGroups();
+        const group = groups.find(g => g.id === event.currentTarget.dataset.groupId);
+        if (group) { group.collapsed = !group.collapsed; await this._saveGroups(groups); }
+    }
+
     async _onToggleVisibility(event) {
         event.preventDefault();
         if (!game.user.isGM) return;
@@ -311,13 +319,69 @@ export class SceneAspectsApp extends FormApplication {
             return;
         }
 
-        if (aspects !== null) await storage.setFlag("fatex-extras", "sceneAspects", aspects);
+        if (aspects !== null) {
+            await storage.setFlag("fatex-extras", "sceneAspects", aspects);
+            
+            if (game.user.isGM) {
+                for (const aspect of aspects) {
+                    await this._updateAspectDrawingsLocal(aspect);
+                }
+            }
+            
+            for (const aspect of aspects) {
+                game.socket.emit("module.fatex-extras", {
+                    action: "UPDATE_ASPECT_DRAWINGS",
+                    aspectId: aspect.id
+                });
+            }
+        }
         if (groups !== null) await storage.setFlag("fatex-extras", "sceneAspectGroups", groups);
         if (tags !== null) await storage.setFlag("fatex-extras", "sceneAspectTags", tags);
+        
+        game.socket.emit("module.fatex-extras", { action: "REFRESH_APPS" });
+    }
+    
+    async _updateAspectDrawingsLocal(aspect) {
+        const scene = game.scenes.active;
+        if (!scene) return;
+        
+        const storage = await AspectStorage.getStorage();
+        const allTags = storage?.getFlag("fatex-extras", "sceneAspectTags") || [];
+        const aspectTags = (aspect.tagIds || []).map(tid => allTags.find(t => t.id === tid)).filter(Boolean);
+        
+        const showTags = game.settings.get("fatex-extras", "sceneDrawingShowTags") ?? true;
+        const showInvokes = game.settings.get("fatex-extras", "sceneDrawingShowInvokes") ?? true;
+        const showHostile = game.settings.get("fatex-extras", "sceneDrawingShowHostile") ?? true;
+        
+        const tagsText = (showTags && aspectTags.length > 0) ? `[${aspectTags.map(t => t.label).join(' | ')}]` : '';
+        
+        let invokesLine = '';
+        if (showInvokes || showHostile) {
+            const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
+            const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
+            
+            if (showInvokes && showHostile) {
+                invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            } else if (showInvokes) {
+                invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+            } else {
+                invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            }
+        }
+        
+        const text = aspect.name + (tagsText ? '\n' + tagsText : '') + (invokesLine ? '\n' + invokesLine : '');
+        const fillColor = aspect.color || "#4a4a4a";
+        
+        const drawings = scene.drawings.filter(d => d.getFlag("fatex-extras", "isAspectDrawing") && d.getFlag("fatex-extras", "aspectId") === aspect.id);
+        
+        for (const drawing of drawings) {
+            const height = drawing.shape.height;
+            const fontSize = Math.min(64, Math.max(10, Math.round(height * 0.18)));
+            await drawing.update({ text: text, fillColor: fillColor, fontSize: fontSize });
+        }
     }
 
     _onDragStart(event) {
-        if (!game.user.isGM) return;
         const li = event.currentTarget;
         if (li.classList.contains("aspect-tag-pill")) {
             this._dragType = "tag";
@@ -328,6 +392,7 @@ export class SceneAspectsApp extends FormApplication {
         } else {
             this._dragType = "aspect";
             event.dataTransfer.setData("text/plain", JSON.stringify({ type: "SceneAspect", id: li.dataset.id }));
+            if (!game.user.isGM) return;
         }
     }
 
