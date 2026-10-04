@@ -4,7 +4,8 @@ export class AspectStorage {
         GROUPS: "sceneAspectGroups",
         TAGS: "sceneAspectTags",
         IS_GLOBAL_STORAGE: "isGlobalAspectStorage",
-        CHARACTER_INVOKES: "characterInvokes"
+        CHARACTER_INVOKES: "characterInvokes",
+        PLACEMENTS: "sceneAspectPlacements"
     };
 
     static async getStorage() {
@@ -30,12 +31,21 @@ export class AspectStorage {
                     [AspectStorage.FLAGS.ASPECTS]: [],
                     [AspectStorage.FLAGS.GROUPS]: [],
                     [AspectStorage.FLAGS.TAGS]: defaultTags,
-                    [AspectStorage.FLAGS.CHARACTER_INVOKES]: {}
+                    [AspectStorage.FLAGS.CHARACTER_INVOKES]: {},
+                    [AspectStorage.FLAGS.PLACEMENTS]: []
                 }
             }
         };
 
         return await JournalEntry.create(journalData);
+    }
+
+    static async ensurePlacementsFlag() {
+        const storage = await AspectStorage.getStorage();
+        if (!storage) return;
+        if (storage.getFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS) === undefined) {
+            await storage.setFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS, []);
+        }
     }
 
     static async syncItemToGlobal(item) {

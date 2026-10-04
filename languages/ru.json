@@ -12,6 +12,8 @@
             "Other": "Другое",
             "Invokes": "Призывы",
             "HostileInvokes": "Призывы ГМа",
+            "CreateAspect": "Создать аспект",
+            "Create": "Создать",
             "NoAspects": "Аспекты сцены еще не созданы.",
             "AddCategory": "Новая категория",
             "DeleteAspectTitle": "Удалить аспект",
@@ -36,7 +38,37 @@
             "PickExistingTag": "Выбрать существующий тег",
             "GlobalAspectsJournalName": "Глобальные аспекты FateX",
             "CannotDeleteStorage": "FateX Extras: Эта запись журнала хранит глобальные аспекты и не может быть удалена вручную.",
-            "Delete": "Удалить"
+            "Delete": "Удалить",
+            "DragToScene": "Перетащите на сцену, чтобы создать текстовую заметку",
+            "AspectAddedToScene": "Добавлен '{name}' на сцену",
+            "SearchAspects": "Поиск аспектов...",
+            "CollapseAll": "Свернуть все",
+            "ExpandAll": "Развернуть все",
+            "CreateGroup": "Создать категорию",
+            "ToggleVisibility": "Переключить видимость",
+            "RemoveTag": "Удалить тег",
+            "IncreaseInvokes": "Увеличить призывы",
+            "DecreaseInvokes": "Уменьшить призывы",
+            "WaitingForGM": "Аспекты еще не инициализированы. Попросите ГМа открыть менеджер аспектов."
+        },
+        "Keybindings": {
+            "OpenSceneAspects": "Открыть/закрыть менеджер аспектов",
+            "OpenSceneAspectsHint": "Открывает или закрывает окно менеджера аспектов сцены."
+        },
+        "Manager": {
+            "PlacePanel": "Разместить менеджер аспектов на канвасе",
+            "AlreadyPlaced": "Менеджер аспектов уже размещён на этой сцене",
+            "NoCanvas": "Канвас не готов",
+            "RemoveConfirm": "Убрать эту панель менеджера со сцены? (Аспекты останутся в журнале)",
+            "RemoveManager": "Убрать панель менеджера"
+        },
+        "ContextMenu": {
+            "IncreaseInvokes": "+1 бесплатный призыв",
+            "DecreaseInvokes": "-1 бесплатный призыв",
+            "IncreaseHostile": "+1 призыв ГМа",
+            "DecreaseHostile": "-1 призыв ГМа",
+            "OpenInManager": "Открыть в менеджере",
+            "DeleteDrawing": "Удалить со сцены"
         },
         "Dice": {
             "SystemName": "FateX Extras"
@@ -54,6 +86,8 @@
             "SceneDrawingShowHostileHint": "Отображать счетчик призывов ГМа на холсте",
             "SceneDrawingShowInvokes": "Показывать призывы",
             "SceneDrawingShowInvokesHint": "Отображать счетчик призывы на холсте",
+            "SceneDrawingCompactInvokes": "Компактные призывы на холсте",
+            "SceneDrawingCompactInvokesHint": "Отображать призывы как '+ / -' вместо 'Призывы / Призывы ГМа' на холсте",
             "SceneDrawingStrokeColor": "Цвет рамки аспектов",
             "SceneDrawingStrokeColorHint": "Цвет рамки надписей аспектов на холсте",
             "SceneDrawingStrokeAlpha": "Прозрачность рамки",

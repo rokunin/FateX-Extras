@@ -1,18 +1,33 @@
-import { SceneAspectsApp } from "./apps/scene-aspects.js";
+import { SceneAspectsApp, applyAspectInvokeValue } from "./apps/scene-aspects.js";
 import { RollModifiers } from "./features/roll-modifiers.js";
 import { AspectStorage } from "./helpers/aspect-storage.js";
+import { AspectWidgetsLayer } from "./canvas/aspect-widget-layer.mjs";
 
 const MODULE_ID = "fatex-extras";
 const SOCKET_NAME = `module.${MODULE_ID}`;
 
+function openAspectManager() {
+    const existing = Object.values(ui.windows).find(w => w instanceof SceneAspectsApp);
+    if (existing) existing.render(true);
+    else new SceneAspectsApp().render(true);
+}
+globalThis.openAspectManager = openAspectManager;
+globalThis._openAspectManagerGlobal = (aspectId) => {
+    const existing = Object.values(ui.windows).find(w => w instanceof SceneAspectsApp);
+    if (existing) existing.close();
+    new SceneAspectsApp({ focusAspectId: aspectId }).render(true);
+};
+
 Hooks.on("getSceneControlButtons", (controls) => {
-    const mainTool = {
+    const aspectButtonTool = {
         name: "scene-aspects",
-        title: "Aspect Manager",
+        title: game.i18n.localize("FAx.Global.ManageAspects"),
         icon: "fas fa-book-open",
-        visible: true, 
-        onClick: () => { new SceneAspectsApp().render(true); },
-        button: true
+        visible: true,
+        button: true,
+        onChange: (event, active) => {
+            if (active) openAspectManager();
+        }
     };
 
     const findControlGroup = (name) => {
@@ -26,32 +41,82 @@ Hooks.on("getSceneControlButtons", (controls) => {
         return null;
     };
 
-    const token = findControlGroup("token") || findControlGroup("tokens");
-    if (token) {
-        if (!token.tools) token.tools = [];
-        if (Array.isArray(token.tools)) {
-            if (!token.tools.find(t => t.name === "scene-aspects")) token.tools.push({ ...mainTool });
-        } else if (token.tools instanceof Map) {
-            if (!token.tools.has("scene-aspects")) token.tools.set("scene-aspects", { ...mainTool });
-        } else if (typeof token.tools === "object") {
-            if (!token.tools["scene-aspects"]) token.tools["scene-aspects"] = { ...mainTool };
+    const setTool = (group, tool) => {
+        if (!group) return;
+        if (!group.tools) group.tools = {};
+        if (Array.isArray(group.tools)) {
+            if (!group.tools.find(t => t.name === tool.name)) group.tools.push({ ...tool });
+        } else if (group.tools instanceof Map) {
+            if (!group.tools.has(tool.name)) group.tools.set(tool.name, { ...tool });
+        } else if (typeof group.tools === "object") {
+            if (!group.tools[tool.name]) group.tools[tool.name] = { ...tool };
         } else {
-             console.warn("FateX Extras | Expected token.tools to be an array, Map or object but got:", typeof token.tools, token.tools);
+            console.warn("FateX Extras | Expected group.tools to be an array, Map or object but got:", typeof group.tools, group.tools);
         }
+    };
+
+
+    const tokenGroup = findControlGroup("tokens");
+    if (tokenGroup) {
+        const tokenTool = { ...aspectButtonTool, name: "scene-aspects-token", title: game.i18n.localize("FAx.Global.ManageAspects") };
+        setTool(tokenGroup, tokenTool);
+        if (!tokenGroup.activeTool) tokenGroup.activeTool = tokenGroup.activeTool || "select";
     }
+
+    const oldGroup = findControlGroup("aspects");
+    if (oldGroup?.tools) {
+        if (oldGroup.tools instanceof Map) oldGroup.tools.delete("scene-aspects");
+        else if (Array.isArray(oldGroup.tools)) {
+            const idx = oldGroup.tools.findIndex(t => t.name === "scene-aspects");
+            if (idx !== -1) oldGroup.tools.splice(idx, 1);
+        } else if (typeof oldGroup.tools === "object") {
+            delete oldGroup.tools["scene-aspects"];
+        }
+
+        const hasTools = oldGroup.tools instanceof Map ? oldGroup.tools.size > 0 : Array.isArray(oldGroup.tools) ? oldGroup.tools.length > 0 : Object.keys(oldGroup.tools).length > 0;
+        if (!hasTools) oldGroup.visible = false;
+    }
+});
+
+document.addEventListener("click", (event) => {
+    const el = event.target.closest?.('#scene-controls [data-tool="scene-aspects-token"]');
+    if (!el) return;
+    openAspectManager();
+});
+
+Hooks.once("setup", () => {
+    game.keybindings.register("fatex-extras", "openSceneAspects", {
+        name: "FAx.Keybindings.OpenSceneAspects",
+        hint: "FAx.Keybindings.OpenSceneAspectsHint",
+        editable: [{ key: "KeyA" }],
+        onDown: () => {
+            const existing = Object.values(ui.windows).find(w => w instanceof SceneAspectsApp);
+            if (existing) existing.close();
+            else new SceneAspectsApp().render(true);
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+    });
 });
 
 Hooks.once("diceSoNiceReady", (dice3d) => {
     dice3d.addSystem({ id: "fatex-extras", name: game.i18n.localize("FAx.Dice.SystemName") }, "default");
     dice3d.addDicePreset({
         type: "dc",
-        labels: ["", ""], 
+        labels: ["", ""],
         modelFile: "modules/fatex-extras/assets/dc_die.glb",
         system: "fatex-extras"
     });
 });
 
 Hooks.once("init", () => {
+    try {
+        CONFIG.Canvas.layers.aspects = {
+            layerClass: AspectWidgetsLayer,
+            group: "interface"
+        };
+    } catch (e) {
+        console.warn("FateX Extras | Failed to register aspects canvas layer", e);
+    }
     game.settings.register("fatex-extras", "darkMode", {
         name: game.i18n.localize("FAx.Settings.DarkMode"),
         hint: game.i18n.localize("FAx.Settings.DarkModeHint"),
@@ -64,7 +129,7 @@ Hooks.once("init", () => {
             else document.body.classList.remove("fatex-dark-mode");
         }
     });
-    
+
     game.settings.register("fatex-extras", "sceneDrawingFont", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingFont"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingFontHint"),
@@ -74,14 +139,14 @@ Hooks.once("init", () => {
         default: "Signika",
         choices: {
             "Signika": "Signika",
-            "Roboto": "Roboto", 
+            "Roboto": "Roboto",
             "Roboto Condensed": "Roboto Condensed",
             "Arial": "Arial",
             "Georgia": "Georgia",
             "Times New Roman": "Times New Roman"
         }
     });
-    
+
     game.settings.register("fatex-extras", "sceneDrawingBgAlpha", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingBgAlpha"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingBgAlphaHint"),
@@ -91,7 +156,7 @@ Hooks.once("init", () => {
         default: 1,
         range: { min: 0, max: 1, step: 0.1 }
     });
-    
+
     game.settings.register("fatex-extras", "sceneDrawingShowTags", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingShowTags"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingShowTagsHint"),
@@ -100,7 +165,7 @@ Hooks.once("init", () => {
         type: Boolean,
         default: true
     });
-    
+
     game.settings.register("fatex-extras", "sceneDrawingShowHostile", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingShowHostile"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingShowHostileHint"),
@@ -109,7 +174,7 @@ Hooks.once("init", () => {
         type: Boolean,
         default: true
     });
-    
+
     game.settings.register("fatex-extras", "sceneDrawingShowInvokes", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingShowInvokes"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingShowInvokesHint"),
@@ -118,7 +183,16 @@ Hooks.once("init", () => {
         type: Boolean,
         default: true
     });
-    
+
+    game.settings.register("fatex-extras", "sceneDrawingCompactInvokes", {
+        name: game.i18n.localize("FAx.Settings.SceneDrawingCompactInvokes"),
+        hint: game.i18n.localize("FAx.Settings.SceneDrawingCompactInvokesHint"),
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
     game.settings.register("fatex-extras", "sceneDrawingStrokeColor", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingStrokeColor"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingStrokeColorHint"),
@@ -127,7 +201,7 @@ Hooks.once("init", () => {
         type: new foundry.data.fields.ColorField({ nullable: false }),
         default: "#ffffff"
     });
-    
+
     game.settings.register("fatex-extras", "sceneDrawingStrokeAlpha", {
         name: game.i18n.localize("FAx.Settings.SceneDrawingStrokeAlpha"),
         hint: game.i18n.localize("FAx.Settings.SceneDrawingStrokeAlphaHint"),
@@ -137,14 +211,14 @@ Hooks.once("init", () => {
         default: 0.3,
         range: { min: 0, max: 1, step: 0.1 }
     });
-    
+
     game.settings.register("fatex-extras", "koFiDismissed", {
         scope: "world",
         config: false,
         type: Boolean,
         default: false
     });
-    
+
     game.settings.register("fatex-extras", "showKoFiMessage", {
         name: game.i18n.localize("FAx.KoFi.ShowMessage"),
         hint: game.i18n.localize("FAx.KoFi.ShowMessageHint"),
@@ -155,53 +229,246 @@ Hooks.once("init", () => {
     });
 
     RollModifiers.init();
+
+
+    const APPEARANCE_SETTINGS = new Set([
+        "sceneDrawingFont",
+        "sceneDrawingBgAlpha",
+        "sceneDrawingShowTags",
+        "sceneDrawingShowHostile",
+        "sceneDrawingShowInvokes",
+        "sceneDrawingCompactInvokes",
+        "sceneDrawingStrokeColor",
+        "sceneDrawingStrokeAlpha"
+    ]);
+    Hooks.on("updateSetting", (setting, changed) => {
+        if (setting.namespace !== "fatex-extras" || !APPEARANCE_SETTINGS.has(setting.key)) return;
+        canvas.aspects?.refreshWidgets?.();
+
+        _resyncAllAspectDrawings();
+    });
 });
 
 function _onDocumentDragOver(event) {
     try {
-        const data = JSON.parse(event.dataTransfer.getData("text/plain") || "{}");
-        if (data.type === "SceneAspect") {
+        const raw = event.dataTransfer.getData("text/plain") || "{}";
+        const data = JSON.parse(raw);
+        if (data.type === "SceneAspect" || data.type === "CharacterAspect") {
             event.preventDefault();
             event.dataTransfer.dropEffect = "copy";
+            return;
+        }
+        if (data.type === "PlaceAspectManager") {
+            if (!game.user.isGM) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+            return;
+        }
+
+        if (data.type === "Item") {
+            const uuid = data.uuid || "";
+
+            if (uuid.includes("Item.") || data.data?.type === "aspect" || data.data?.type === "consequence") {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "copy";
+            }
         }
     } catch (e) {}
 }
 
-async function _onDocumentDrop(event) {
-    if (!game.user.isGM) return;
-    
+async function _resolveCharacterItemFromDropData(data) {
     try {
-        const data = JSON.parse(event.dataTransfer.getData("text/plain") || "{}");
-        if (data.type !== "SceneAspect") return;
-        
-        if (!canvas?.ready || !game.scenes.active) return;
-        
+        if (data.type === "CharacterAspect" && data.actorId && data.itemId) {
+            const actor = game.actors.get(data.actorId);
+            const item = actor?.items.get(data.itemId);
+            if (item && (item.type === "aspect" || item.type === "consequence")) return item;
+        }
+        if (data.type === "Item") {
+            let doc = null;
+            if (data.uuid) {
+                try { doc = await fromUuid(data.uuid); } catch {}
+            }
+            if (!doc && data.data?._id) {
+
+                const actor = data.data?.actorId ? game.actors.get(data.data.actorId) : null;
+                doc = actor?.items.get(data.data._id) || game.items.get(data.data._id);
+            }
+            if (doc && (doc.documentName === "Item" || doc.type === "aspect" || doc.type === "consequence")) {
+                const item = doc.documentName === "Item" ? doc : null;
+                if (item && (item.type === "aspect" || item.type === "consequence")) return item;
+            }
+
+            if (data.data?.type === "aspect" || data.data?.type === "consequence") {
+                return { type: data.data.type, name: data.data.name || data.data.label, system: data.data.system, id: data.data._id || foundry.utils.randomID(), parent: { id: data.actorId || null } };
+            }
+        }
+    } catch {}
+    return null;
+}
+
+async function _onDocumentDrop(event) {
+    try {
+
+        let raw = event.dataTransfer.getData("text/plain") || "";
+        let data = {};
+        try { data = raw ? JSON.parse(raw) : {}; } catch { data = {}; }
+        if (!data.type) {
+            try {
+                const alt = event.dataTransfer.getData("application/json") || event.dataTransfer.getData("text/x-item") || "{}";
+                const altData = JSON.parse(alt);
+                if (altData.type) { data = altData; raw = alt; }
+            } catch {}
+        }
+
+        if (!data.type && event.dataTransfer.types?.includes("text/plain")) {
+            try {
+                const txt = event.dataTransfer.getData("text/plain");
+                if (txt && txt.includes("Item")) {
+                    data = { type: "Item", uuid: txt };
+                }
+            } catch {}
+        }
+        const isSceneAspect = data.type === "SceneAspect";
+        const isCharacterDrag = data.type === "CharacterAspect" || data.type === "Item";
+        const isManagerPin = data.type === "PlaceAspectManager";
+        if (!isSceneAspect && !isCharacterDrag && !isManagerPin) {
+
+            console.log("FateX Extras | Drop ignored, data:", data, "types:", [...(event.dataTransfer.types||[])]);
+            return;
+        }
+
+        if (!canvas?.ready || !game.scenes.active) {
+            console.warn("FateX Extras | Drop ignored: canvas not ready");
+            return;
+        }
+
+        const coords = _clientToCanvas(event.clientX, event.clientY);
+        if (!coords) {
+            console.warn("FateX Extras | Drop ignored: could not get canvas coords", event.clientX, event.clientY);
+            return;
+        }
         const dropTarget = event.target;
-        const isOnCanvas = dropTarget === canvas.app.view || 
-                          dropTarget.closest?.('#board') || 
+
+        if (dropTarget.closest?.(".fatex-scene-aspects") || dropTarget.closest?.("#fatex-scene-aspects") || dropTarget.closest?.(".fatex-desk")) {
+            console.log("FateX Extras | Drop inside manager, ignoring canvas drop");
+            return;
+        }
+
+        if (dropTarget.closest?.(".window-app.fatex-extras-app") || document.querySelector("#fatex-scene-aspects")?.contains(dropTarget)) {
+            return;
+        }
+        const isOnCanvas = dropTarget === canvas.app.view ||
+                          dropTarget.closest?.('#board') ||
                           dropTarget.classList?.contains('board') ||
                           (canvas.app.view && canvas.app.view.contains(dropTarget));
-        
+        console.log("FateX Extras | Drop detected", {type: data.type, coords, isOnCanvas, dropTarget: dropTarget?.id || dropTarget?.tagName});
         if (!isOnCanvas) return;
-        
-        const storage = await AspectStorage.getStorage();
-        if (!storage) return;
-        
-        const aspects = storage.getFlag("fatex-extras", "sceneAspects") || [];
-        const aspect = aspects.find(a => a.id === data.id);
-        if (!aspect) return;
-        
-        const rect = canvas.app.view.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / canvas.stage.scale.x;
-        const y = (event.clientY - rect.top) / canvas.stage.scale.y;
-        
-        const { mainDrawing } = await _createAspectDrawingData(aspect, x, y);
-        
-        await game.scenes.active.createEmbeddedDocuments("Drawing", [mainDrawing]);
-        
-        ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name: aspect.name }));
+
+        if (isManagerPin) {
+            if (!game.user.isGM) return;
+            if (canvas.aspects?.createManagerPlacement) {
+                await canvas.aspects.createManagerPlacement(coords.x, coords.y);
+                event.preventDefault?.();
+                event.stopPropagation?.();
+            }
+            return;
+        }
+
+        if (isSceneAspect) {
+            const storage = await AspectStorage.getStorage();
+            if (!storage) return;
+            const aspects = storage.getFlag("fatex-extras", "sceneAspects") || [];
+            const aspect = aspects.find(a => a.id === data.id);
+            if (!aspect) return;
+            if (canvas.aspects?.createPlacement) {
+                await canvas.aspects.createPlacement(aspect.id, coords.x, coords.y);
+            } else {
+                const { mainDrawing } = await _createAspectDrawingData(aspect, coords.x, coords.y);
+                await game.scenes.active.createEmbeddedDocuments("Drawing", [mainDrawing]);
+            }
+            ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name: aspect.name }));
+            event.preventDefault?.();
+            event.stopPropagation?.();
+            return;
+        }
+
+
+        let item = await _resolveCharacterItemFromDropData(data);
+
+        if (!item && data.type === "CharacterAspect" && data.actorId && data.itemId) {
+            const actor = game.actors.get(data.actorId);
+            const fallback = actor?.items.get(data.itemId);
+            if (fallback) item = fallback;
+            else item = { type: "aspect", name: "Aspect", id: data.itemId, parent: { id: data.actorId }, system: { value: "" } };
+        }
+        if (!item) {
+            console.warn("FateX Extras | Drop: could not resolve character item", data);
+            return;
+        }
+        const isConsequence = item.type === "consequence";
+        const displayName = item.system?.value ? _stripHtml(item.system.value) || item.name : item.name;
+        const cleanName = (displayName || item.name || "Aspect").trim().substring(0, 120);
+        const color = isConsequence ? "#b83636" : "#6b7280";
+        const actorId = item.parent?.id || item.actorId || data.actorId || null;
+        const itemId = item.id || item._id || data.itemId || null;
+        console.log("FateX Extras | Creating character widget", { cleanName, color, isConsequence, actorId, itemId, coords, hasLayer: !!canvas.aspects?.createPlacementFromCharacter });
+
+        if (!game.user.isGM) {
+            game.socket.emit(SOCKET_NAME, { action: "CREATE_CHARACTER_PLACEMENT", name: cleanName, color, isConsequence, actorId, itemId, x: coords.x, y: coords.y, sceneId: canvas.scene.id });
+            ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name: cleanName }));
+            return;
+        }
+        if (canvas.aspects?.createPlacementFromCharacter) {
+            await canvas.aspects.createPlacementFromCharacter(cleanName, color, isConsequence, actorId, itemId, coords.x, coords.y);
+            ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name: cleanName }));
+        } else {
+
+            const storage = await AspectStorage.getStorage();
+            if (!storage) {
+                console.warn("FateX Extras | No storage for character widget");
+                return;
+            }
+            const placements = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS) || []);
+            const placement = { id: foundry.utils.randomID(), sceneId: canvas.scene.id, x: coords.x, y: coords.y, source: "character", name: cleanName, color, isConsequence: !!isConsequence, actorId, itemId };
+            placements.push(placement);
+            await storage.setFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS, placements);
+            game.socket.emit(SOCKET_NAME, { action: "REFRESH_WIDGETS" });
+            await canvas.aspects?.refreshWidgets?.();
+            ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name: cleanName }));
+        }
     } catch (e) {
         console.error("FateX Extras | Error creating aspect drawing:", e);
+    }
+}
+
+function _stripHtml(html) {
+    if (!html) return "";
+    if (foundry?.utils?.stripHTML) try { return foundry.utils.stripHTML(html); } catch {}
+    try {
+        const d = document.createElement("div");
+        d.innerHTML = html;
+        return d.textContent || d.innerText || "";
+    } catch { return String(html).replace(/<[^>]*>/g, ""); }
+}
+
+function _clientToCanvas(clientX, clientY) {
+    try {
+        if (canvas.canvasCoordinatesFromClient) {
+            const point = canvas.canvasCoordinatesFromClient({ x: clientX, y: clientY });
+            if (point) return { x: point.x, y: point.y };
+        }
+        if (canvas.screenToCanvas) {
+            const point = canvas.screenToCanvas(clientX, clientY);
+            if (point) return { x: point.x, y: point.y };
+        }
+        const t = canvas.stage.worldTransform;
+        return {
+            x: (clientX - t.tx) / t.a,
+            y: (clientY - t.ty) / t.d
+        };
+    } catch (e) {
+        console.error("FateX Extras | Error converting client coordinates to canvas coordinates:", e);
+        return null;
     }
 }
 
@@ -210,29 +477,40 @@ async function _createAspectDrawingData(aspect, x, y) {
     const storage = await AspectStorage.getStorage();
     const allTags = storage ? storage.getFlag("fatex-extras", "sceneAspectTags") || [] : [];
     const aspectTags = tags.map(tid => allTags.find(t => t.id === tid)).filter(Boolean);
-    
+
     const showTags = game.settings.get("fatex-extras", "sceneDrawingShowTags") ?? true;
     const showInvokes = game.settings.get("fatex-extras", "sceneDrawingShowInvokes") ?? true;
     const showHostile = game.settings.get("fatex-extras", "sceneDrawingShowHostile") ?? true;
-    
+    const compactInvokes = game.settings.get("fatex-extras", "sceneDrawingCompactInvokes") ?? false;
+
     const tagsText = (showTags && aspectTags.length > 0) ? `[${aspectTags.map(t => t.label).join(' | ')}]` : '';
-    
+
     let invokesLine = '';
     if (showInvokes || showHostile) {
-        const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
-        const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
-        
-        if (showInvokes && showHostile) {
-            invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
-        } else if (showInvokes) {
-            invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+        if (compactInvokes) {
+            if (showInvokes && showHostile) {
+                invokesLine = `${"+".repeat(aspect.invokes || 0)} | ${"-".repeat(aspect.hostileInvokes || 0)}`;
+            } else if (showInvokes) {
+                invokesLine = "+".repeat(aspect.invokes || 0);
+            } else {
+                invokesLine = "-".repeat(aspect.hostileInvokes || 0);
+            }
         } else {
-            invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
+            const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
+
+            if (showInvokes && showHostile) {
+                invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            } else if (showInvokes) {
+                invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+            } else {
+                invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            }
         }
     }
-    
+
     const text = aspect.name + (tagsText ? '\n' + tagsText : '') + (invokesLine ? '\n' + invokesLine : '');
-    
+
     const width = Math.max(200, Math.max(aspect.name.length, tagsText.length, invokesLine.length) * 10);
     const height = (showTags && aspectTags.length > 0) ? 100 : 70;
     const bgColor = aspect.color || "#4a4a4a";
@@ -251,7 +529,7 @@ async function _createAspectDrawingData(aspect, x, y) {
         }
     }
     const strokeAlpha = game.settings.get("fatex-extras", "sceneDrawingStrokeAlpha") ?? 0.3;
-    
+
     const mainDrawing = {
         author: game.user.id,
         type: foundry.data.ShapeData.TYPES.RECTANGLE,
@@ -283,7 +561,7 @@ async function _createAspectDrawingData(aspect, x, y) {
             }
         }
     };
-    
+
     return { mainDrawing };
 }
 
@@ -292,9 +570,9 @@ document.addEventListener("drop", _onDocumentDrop);
 
 Hooks.on("updateDrawing", async (drawing, changes, options, userId) => {
     if (!drawing.getFlag("fatex-extras", "isAspectDrawing")) return;
-    
+
     const newHeight = drawing.shape?.height;
-    
+
     if (newHeight !== undefined) {
         const fontSize = Math.min(64, Math.max(10, Math.round(newHeight * 0.18)));
         await drawing.update({ fontSize: fontSize });
@@ -304,58 +582,105 @@ Hooks.on("updateDrawing", async (drawing, changes, options, userId) => {
 async function _updateAspectDrawings(aspectId) {
     const scene = game.scenes.active;
     if (!scene) return;
-    
+
     const storage = await AspectStorage.getStorage();
     if (!storage) return;
-    
+
     const aspects = storage.getFlag("fatex-extras", "sceneAspects") || [];
     const aspect = aspects.find(a => a.id === aspectId);
     if (!aspect) return;
-    
+
     const allTags = storage.getFlag("fatex-extras", "sceneAspectTags") || [];
     const aspectTags = (aspect.tagIds || []).map(tid => allTags.find(t => t.id === tid)).filter(Boolean);
-    
+
     const showTags = game.settings.get("fatex-extras", "sceneDrawingShowTags") ?? true;
     const showInvokes = game.settings.get("fatex-extras", "sceneDrawingShowInvokes") ?? true;
     const showHostile = game.settings.get("fatex-extras", "sceneDrawingShowHostile") ?? true;
-    
+    const compactInvokes = game.settings.get("fatex-extras", "sceneDrawingCompactInvokes") ?? false;
+
     const tagsText = (showTags && aspectTags.length > 0) ? `[${aspectTags.map(t => t.label).join(' | ')}]` : '';
-    
+
     let invokesLine = '';
     if (showInvokes || showHostile) {
-        const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
-        const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
-        
-        if (showInvokes && showHostile) {
-            invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
-        } else if (showInvokes) {
-            invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+        if (compactInvokes) {
+            if (showInvokes && showHostile) {
+                invokesLine = `${"+".repeat(aspect.invokes || 0)} | ${"-".repeat(aspect.hostileInvokes || 0)}`;
+            } else if (showInvokes) {
+                invokesLine = "+".repeat(aspect.invokes || 0);
+            } else {
+                invokesLine = "-".repeat(aspect.hostileInvokes || 0);
+            }
         } else {
-            invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
+            const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
+
+            if (showInvokes && showHostile) {
+                invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            } else if (showInvokes) {
+                invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+            } else {
+                invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+            }
         }
     }
-    
+
     const text = aspect.name + (tagsText ? '\n' + tagsText : '') + (invokesLine ? '\n' + invokesLine : '');
     const fillColor = aspect.color || "#4a4a4a";
-    
+
     const drawings = scene.drawings.filter(d => d.getFlag("fatex-extras", "isAspectDrawing") && d.getFlag("fatex-extras", "aspectId") === aspectId);
-    
+
     for (const drawing of drawings) {
         const height = drawing.shape.height;
         const fontSize = Math.min(64, Math.max(10, Math.round(height * 0.18)));
-        
-        await drawing.update({ 
+        const fontFamily = game.settings.get("fatex-extras", "sceneDrawingFont") || "Signika";
+
+        await drawing.update({
             text: text,
             fillColor: fillColor,
-            fontSize: fontSize
+            fontSize: fontSize,
+            fontFamily: fontFamily
         });
+    }
+}
+
+async function _resyncAllAspectDrawings() {
+    const scene = game.scenes.active;
+    if (!scene || !game.user.isGM) return;
+    const aspectIds = new Set(
+        scene.drawings
+            .filter(d => d.getFlag("fatex-extras", "isAspectDrawing"))
+            .map(d => d.getFlag("fatex-extras", "aspectId"))
+            .filter(Boolean)
+    );
+    for (const id of aspectIds) {
+        await _updateAspectDrawings(id);
     }
 }
 
 Hooks.on("preDeleteDrawing", async (drawing, options, userId) => {
 });
 
+Hooks.on("canvasReady", () => {
+    canvas.aspects?.refreshWidgets?.();
+});
+Hooks.on("canvasPan", () => {
+
+    canvas.aspects?.sortChildren?.();
+});
+
 Hooks.once("ready", async () => {
+    _patchDrawingInteractions();
+    _patchDrawingToolValidation();
+
+    const scene = game.scenes?.active;
+    if (scene) {
+        for (const drawing of scene.drawings ?? []) {
+            if (drawing.getFlag("fatex-extras", "isAspectDrawing")) {
+                drawing.object?.refresh?.({ refreshState: true });
+            }
+        }
+    }
+    canvas.aspects?.refreshWidgets?.();
     const FateActor = CONFIG.Actor.documentClass;
     if (FateActor) {
         FateActor.createDialog = async function (data, options = {}) {
@@ -374,8 +699,10 @@ Hooks.once("ready", async () => {
     }
 
     await AspectStorage.getStorage();
+    await AspectStorage.ensurePlacementsFlag();
     hideAspectJournal();
-    
+    canvas.aspects?.refreshWidgets?.();
+
     const moduleData = game.modules.get("fatex-extras");
     let koFiUrl = "";
     if (moduleData?.authors) {
@@ -384,7 +711,7 @@ Hooks.once("ready", async () => {
     }
     const koFiDismissed = game.settings.get("fatex-extras", "koFiDismissed");
     const showKoFi = game.settings.get("fatex-extras", "showKoFiMessage") !== false;
-    
+
     if (game.user.isGM && !koFiDismissed && showKoFi && koFiUrl && koFiUrl.includes("ko-fi")) {
         ChatMessage.create({
             user: game.user.id,
@@ -404,7 +731,7 @@ Hooks.once("ready", async () => {
                 </div>
             `
         });
-        
+
         Hooks.on("renderChatMessage", (message, html) => {
             const btn = html.find("#fatex-ko-fi-dismiss");
             if (btn.length) {
@@ -415,13 +742,35 @@ Hooks.once("ready", async () => {
             }
         });
     }
-    
+
     game.socket.on(SOCKET_NAME, async (payload) => {
         if (payload.action === "REFRESH_APPS") {
             refreshApps();
+            canvas.aspects?.refreshWidgets?.();
+        }
+        else if (payload.action === "REFRESH_WIDGETS") {
+            canvas.aspects?.refreshWidgets?.();
+        }
+        else if (payload.action === "CREATE_CHARACTER_PLACEMENT") {
+            if (!game.user.isGM) return;
+            try {
+                const storage = await AspectStorage.getStorage();
+                if (!storage) return;
+                const placements = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS) || []);
+                const placement = { id: foundry.utils.randomID(), sceneId: payload.sceneId || canvas.scene?.id, x: payload.x, y: payload.y, source: "character", name: payload.name, color: payload.color, isConsequence: !!payload.isConsequence, actorId: payload.actorId, itemId: payload.itemId };
+                placements.push(placement);
+                await storage.setFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS, placements);
+                game.socket.emit(SOCKET_NAME, { action: "REFRESH_WIDGETS" });
+                await canvas.aspects?.refreshWidgets?.();
+                ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name: payload.name }));
+            } catch (e) { console.error("FateX Extras | CREATE_CHARACTER_PLACEMENT failed", e); }
+        }
+        else if (payload.action === "REFRESH_INVOKES") {
+            applyAspectInvokeValue(payload.aspectId, payload.field, payload.value);
         }
         else if (payload.action === "UPDATE_ASPECT_DRAWINGS") {
             await _updateAspectDrawings(payload.aspectId);
+            canvas.aspects?.refreshWidgets?.();
         }
         else if (game.user.isGM) {
             if (payload.action === "UPDATE_CHAT_MESSAGE") {
@@ -470,6 +819,36 @@ Hooks.on("updateJournalEntry", async (doc, change, options, userId) => {
 
     refreshApps();
 
+    const needsWidgetRefresh = foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.ASPECTS}`)
+        || foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.PLACEMENTS}`)
+        || foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.TAGS}`)
+        || foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.GROUPS}`);
+    if (needsWidgetRefresh) {
+
+        if (game.user.isGM && foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.ASPECTS}`)) {
+            const aspects = doc.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || [];
+            const placements = doc.getFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS) || [];
+            const validIds = new Set(aspects.map(a => a.id));
+            const filtered = placements.filter(p => p.source === "manager" || validIds.has(p.aspectId));
+            if (filtered.length !== placements.length) {
+                await doc.setFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS, filtered);
+            }
+        }
+        canvas.aspects?.refreshWidgets?.();
+
+        if (game.user.isGM && foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.ASPECTS}`)) {
+            const aspects = doc.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || [];
+            for (const aspect of aspects) {
+                await _updateAspectDrawings(aspect.id);
+            }
+        }
+    } else if (game.user.isGM && foundry.utils.hasProperty(change, `flags.fatex-extras.${AspectStorage.FLAGS.ASPECTS}`)) {
+        const aspects = doc.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || [];
+        for (const aspect of aspects) {
+            await _updateAspectDrawings(aspect.id);
+        }
+    }
+
     const flat = foundry.utils.flattenObject(change);
     const updatesToProcess = new Set();
 
@@ -489,18 +868,18 @@ Hooks.on("updateJournalEntry", async (doc, change, options, userId) => {
 
         for (const itemId of updatesToProcess) {
             const data = allInvokes[itemId];
-            if (!data) continue; 
+            if (!data) continue;
 
             const actorId = data.actorId;
             const actor = game.actors.get(actorId);
-            
+
             if (actor && actor.isOwner) {
                 const item = actor.items.get(itemId);
                 if (item) {
                     const currentLocal = item.getFlag("fatex-extras", "freeInvokes");
                     if (currentLocal !== data.value) {
-                        await item.update({ 
-                            "flags.fatex-extras.freeInvokes": data.value 
+                        await item.update({
+                            "flags.fatex-extras.freeInvokes": data.value
                         }, { fromGlobalSync: true });
                     }
                 }
@@ -562,7 +941,7 @@ Hooks.on("renderActorSheet", (sheet, html, data) => {
 
         const item = sheet.actor.items.get(itemId);
         if (!item || (item.type !== "aspect" && item.type !== "consequence")) return;
-        
+
         itemEl.find(".fatex-extras-item-tools").remove();
 
         const freeInvokes = item.getFlag("fatex-extras", "freeInvokes") || 0;
@@ -581,7 +960,7 @@ Hooks.on("renderActorSheet", (sheet, html, data) => {
         if (relativeContainer.length) {
             relativeContainer.append(toolsHtml);
             const toolsContainer = relativeContainer.find('.fatex-extras-item-tools');
-            
+
             let chatIcon = relativeContainer.find('.fatex-js-item-to-chat');
             if (chatIcon.length === 0 && item.type === "consequence") {
                 chatIcon = $(`<i class="fatex-js-item-to-chat fatex-actions__icon fatex-actions__icon--no-hide fa fa-comment" data-item="${itemId}" style="pointer-events: all;"></i>`);
@@ -614,7 +993,7 @@ Hooks.on("renderActorSheet", (sheet, html, data) => {
 
         const currentInvokes = item.getFlag("fatex-extras", "freeInvokes") || 0;
         let newInvokes = action === "increase" ? currentInvokes + 1 : Math.max(0, currentInvokes - 1);
-        
+
         if (newInvokes === currentInvokes) return;
 
         if (game.user.isGM || item.isOwner) {
@@ -630,6 +1009,105 @@ Hooks.on("renderActorSheet", (sheet, html, data) => {
     });
 });
 
+Hooks.on("renderActorSheet", (sheet, html, data) => {
+    const actor = sheet.actor;
+    if (!actor || (actor.type !== "character" && actor.type !== "npc")) return;
+    const $html = $(html);
+    $html.find(".fatex-js-sortable[data-item-id]").each((_, el) => {
+        const $el = $(el);
+        if ($el.find(".fatex-drag-scene-handle").length) return;
+        const itemId = $el.attr("data-item-id");
+        const item = actor.items.get(itemId);
+        if (!item || (item.type !== "aspect" && item.type !== "consequence")) return;
+        const isConsequence = item.type === "consequence";
+        const color = isConsequence ? "#b83636" : "#6b7280";
+        const $actions = $el.find(".fatex-actions--item, .fatex-actions");
+        const $chatBtn = $el.find(".fatex-js-item-to-chat");
+        const kindClass = isConsequence ? "fatex-drag--consequence" : "fatex-drag--aspect";
+        const $handle = $(`<i class="fas fa-share-from-square fatex-drag-scene-handle ${kindClass}" draggable="true" title="Drag to scene"></i>`);
+        if ($chatBtn.length) {
+            $chatBtn.before($handle);
+        } else if ($actions.length) {
+            $actions.prepend($handle);
+        } else {
+            $el.find(".fatex-u-pos-relative").append($handle);
+        }
+        $el.css("position", "relative");
+        $el.attr("draggable", "false");
+        $el.find(".fatex-js-aspect-input, .fatex-js-consequence-input").attr("draggable", "false").css("user-select", "text");
+        const handleEl = $handle[0];
+        handleEl.draggable = true;
+        const onDragStart = (e) => {
+            e.stopPropagation();
+            e.stopImmediatePropagation?.();
+            try {
+                const payload = JSON.stringify({ type: "CharacterAspect", actorId: actor.id, itemId: item.id });
+
+                try { e.dataTransfer.clearData(); } catch {}
+                e.dataTransfer.setData("text/plain", payload);
+                try { e.dataTransfer.setData("application/json", payload); } catch {}
+                e.dataTransfer.effectAllowed = "copy";
+                e.dataTransfer.dropEffect = "copy";
+
+                try {
+                    const itemPayload = JSON.stringify({ type: "Item", uuid: item.uuid });
+
+                    try { e.dataTransfer.setData("text/x-item", itemPayload); } catch {}
+                } catch {}
+                if (e.dataTransfer.setDragImage) {
+                    const crt = document.createElement("div");
+                    const bg = isConsequence ? "#b83636" : "#6b7280";
+                    crt.style.cssText = `position:absolute;top:-1000px;padding:7px 12px;background:${bg};color:white;border-radius:6px;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.3);pointer-events:none;`;
+                    crt.textContent = (item.system?.value ? _stripHtml(item.system.value).substring(0,40) : item.name) || item.name;
+                    document.body.appendChild(crt);
+                    e.dataTransfer.setDragImage(crt, 12, 12);
+                    setTimeout(() => crt.remove(), 0);
+                }
+            } catch (err) {
+                console.warn("FateX Extras | dragstart failed", err);
+            }
+        };
+        handleEl.addEventListener("dragstart", onDragStart, true);
+
+        $handle.on("dragstart", (ev) => {
+            const e = ev.originalEvent || ev;
+            if (e.dataTransfer && !e.dataTransfer.getData("text/plain")) {
+                try {
+                    const payload = JSON.stringify({ type: "CharacterAspect", actorId: actor.id, itemId: item.id });
+                    e.dataTransfer.setData("text/plain", payload);
+                    e.dataTransfer.effectAllowed = "copy";
+                } catch {}
+            }
+        });
+        $handle.on("mousedown", (e) => { e.stopPropagation(); e.stopImmediatePropagation?.(); });
+
+        $handle.on("click", (e) => {
+            if (e.detail === 1) {
+
+            }
+        });
+
+    });
+});
+
+
+Hooks.on("createItem", (item, options, userId) => {
+    if (item.type !== "aspect" && item.type !== "consequence") return;
+    canvas.aspects?.refreshWidgets?.();
+});
+Hooks.on("deleteItem", (item, options, userId) => {
+    if (item.type !== "aspect" && item.type !== "consequence") return;
+    canvas.aspects?.refreshWidgets?.();
+});
+Hooks.on("updateItem", (item, change, options, userId) => {
+    if (item.type !== "aspect" && item.type !== "consequence") return;
+    if (change.name !== undefined || change.system?.value !== undefined || change.flags?.["fatex-extras"]?.freeInvokes !== undefined) {
+        canvas.aspects?.refreshWidgets?.();
+    }
+});
+
+
+
 function hideAspectJournal() {
     const journal = game.journal.find(j => j.getFlag("fatex-extras", "isGlobalAspectStorage"));
     if (!journal) return;
@@ -643,5 +1121,632 @@ function hideAspectJournal() {
 }
 
 function refreshApps() {
-    Object.values(ui.windows).forEach(w => { if (w instanceof SceneAspectsApp) w.render(); });
+    Object.values(ui.windows).forEach(w => {
+        if (!(w instanceof SceneAspectsApp)) return;
+
+
+        const $focusedColor = w.element?.find?.("input.aspect-color-trigger:focus");
+        if ($focusedColor && $focusedColor.length) return;
+        w.render();
+    });
 }
+
+function _getDrawingPlaceableClass() {
+    if (foundry?.canvas?.placeables?.Drawing) return foundry.canvas.placeables.Drawing;
+    if (CONFIG?.Canvas?.drawing?.objectClass) return CONFIG.Canvas.drawing.objectClass;
+    if (typeof Drawing === "function") return Drawing;
+    return null;
+}
+
+function _patchDrawingInteractions() {
+    const DrawingPlaceable = _getDrawingPlaceableClass();
+    if (!DrawingPlaceable) {
+        console.warn("FateX Extras | Could not resolve Drawing placeable class, canvas interactions disabled.");
+        return;
+    }
+
+    const originalOnClickRight = DrawingPlaceable.prototype._onClickRight;
+    DrawingPlaceable.prototype._onClickRight = function(event) {
+        if (this.document?.getFlag("fatex-extras", "isAspectDrawing")) {
+            _showAspectContextMenu(this, event);
+            return;
+        }
+        return originalOnClickRight?.call(this, event);
+    };
+
+    const originalOnClickLeft2 = DrawingPlaceable.prototype._onClickLeft2;
+    DrawingPlaceable.prototype._onClickLeft2 = function(event) {
+        if (this.document?.getFlag("fatex-extras", "isAspectDrawing")) {
+            const aspectId = this.document.getFlag("fatex-extras", "aspectId");
+            if (aspectId) _openAspectManager(aspectId);
+            return;
+        }
+        return originalOnClickLeft2?.call(this, event);
+    };
+
+    const originalRefreshState = DrawingPlaceable.prototype._refreshState;
+    DrawingPlaceable.prototype._refreshState = function(...args) {
+        const result = originalRefreshState?.apply(this, args);
+        if (this.document?.getFlag("fatex-extras", "isAspectDrawing") && !this.controlled) {
+            if (this.eventMode !== "static") {
+                this.eventMode = "static";
+                foundry.canvas.interaction.MouseInteractionManager?.emulateMoveEvent();
+            }
+        }
+        return result;
+    };
+}
+
+function _patchDrawingToolValidation() {
+    const DrawingLayer = CONFIG?.Canvas?.layers?.drawings?.layerClass;
+    const DrawingDoc = CONFIG?.Drawing?.documentClass;
+    if (!DrawingLayer?.prototype?._getNewDrawingData || !DrawingDoc?._validateVisibleContent) return;
+
+    const originalGetNewDrawingData = DrawingLayer.prototype._getNewDrawingData;
+    DrawingLayer.prototype._getNewDrawingData = function(origin) {
+        const data = originalGetNewDrawingData.call(this, origin);
+        if (DrawingDoc._validateVisibleContent(data)) return data;
+
+        const shape = data.shape || (data.shape = {});
+        const sw = data.strokeWidth || 0;
+        if (shape.type === "r" || shape.type === "e") {
+            shape.width = Math.max(shape.width || 0, sw + 10);
+            shape.height = Math.max(shape.height || 0, sw + 10);
+        } else if (shape.type === "c") {
+            shape.radius = Math.max(shape.radius || 0, (sw / 2) + 5);
+        } else if (shape.type === "p") {
+            if (!Array.isArray(shape.points) || shape.points.length < 4) {
+                shape.points = [0, 0, 10, 0, 10, 10, 0, 10];
+            }
+            if (!(shape.width > 0) || !(shape.height > 0)) {
+                shape.width = sw + 10;
+                shape.height = sw + 10;
+            }
+        }
+
+        if (!DrawingDoc._validateVisibleContent(data)) {
+            data.strokeWidth = Math.max(data.strokeWidth || 0, 2);
+            data.strokeAlpha = data.strokeAlpha || 1;
+        }
+        return data;
+    };
+}
+
+function _eventClientXY(event) {
+    if (typeof event.clientX === "number" && typeof event.clientY === "number") {
+        return { x: event.clientX, y: event.clientY };
+    }
+    const rect = canvas?.app?.view?.getBoundingClientRect() || { left: 0, top: 0 };
+    const g = event.global || event.data?.global || { x: 0, y: 0 };
+    return { x: rect.left + g.x, y: rect.top + g.y };
+}
+
+function _openAspectManager(aspectId) {
+    const existing = Object.values(ui.windows).find(w => w instanceof SceneAspectsApp);
+    if (existing) existing.close();
+    new SceneAspectsApp({ focusAspectId: aspectId }).render(true);
+}
+
+async function _modifySceneAspectInvokes(aspectId, field, delta) {
+    const storage = await AspectStorage.getStorage();
+    if (!storage) return;
+    const aspects = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+    const aspect = aspects.find(a => a.id === aspectId);
+    if (!aspect) return;
+    aspect[field] = Math.max(0, (aspect[field] || 0) + delta);
+    if (game.user.isGM || storage.isOwner) {
+        await storage.update({ [`flags.fatex-extras.${AspectStorage.FLAGS.ASPECTS}`]: aspects });
+    } else {
+        game.socket.emit(SOCKET_NAME, {
+            action: "UPDATE_JOURNAL",
+            journalId: storage.id,
+            updateData: { [`flags.fatex-extras.${AspectStorage.FLAGS.ASPECTS}`]: aspects }
+        });
+    }
+}
+
+function _removeAspectContextMenu() {
+    document.querySelectorAll(".fatex-context-menu").forEach(menu => menu.remove());
+}
+globalThis._removeAspectContextMenu = _removeAspectContextMenu;
+
+async function _modifyCharacterWidgetInvokes(widget, delta) {
+    const placement = widget.placement;
+    if (!placement || placement.source !== "character" || !placement.actorId || !placement.itemId) return;
+    const actor = game.actors.get(placement.actorId);
+    const item = actor?.items.get(placement.itemId);
+    if (!item) return;
+    const cur = item.getFlag("fatex-extras", "freeInvokes") || 0;
+    const nxt = Math.max(0, cur + delta);
+    if (game.user.isGM || item.isOwner) await item.setFlag("fatex-extras", "freeInvokes", nxt);
+    else game.socket.emit("module.fatex-extras", { action: "UPDATE_ITEM", actorId: actor.id, itemId: item.id, updateData: { "flags.fatex-extras.freeInvokes": nxt } });
+}
+
+function _showWidgetContextMenu(widget, event) {
+    console.log("FateX Extras | _showWidgetContextMenu", { aspectId: widget.aspectId, placementId: widget.placementId, source: widget.placement?.source, isCharacter: widget.placement?.source === "character" });
+    event.stopPropagation?.();
+    event.preventDefault?.();
+    _removeAspectContextMenu();
+    const aspectId = widget.aspectId || widget.placementId;
+    const placementId = widget.placementId;
+    const isCharacter = widget.placement?.source === "character";
+    if (!aspectId && !isCharacter) {
+        console.warn("FateX Extras | _showWidgetContextMenu no aspectId", widget);
+        return;
+    }
+    if (!placementId) {
+        console.warn("FateX Extras | _showWidgetContextMenu no placementId", widget);
+        return;
+    }
+    const items = isCharacter ? [
+        { icon: "fa-plus", label: game.i18n.localize("FAx.ContextMenu.IncreaseInvokes"), action: () => _modifyCharacterWidgetInvokes(widget, 1) },
+        { icon: "fa-minus", label: game.i18n.localize("FAx.ContextMenu.DecreaseInvokes"), action: () => _modifyCharacterWidgetInvokes(widget, -1) }
+    ] : [
+        { icon: "fa-plus", label: game.i18n.localize("FAx.ContextMenu.IncreaseInvokes"), action: () => _modifySceneAspectInvokes(aspectId, "invokes", 1) },
+        { icon: "fa-minus", label: game.i18n.localize("FAx.ContextMenu.DecreaseInvokes"), action: () => _modifySceneAspectInvokes(aspectId, "invokes", -1) }
+    ];
+    if (game.user.isGM && !isCharacter) {
+        items.push(
+            { icon: "fa-plus", label: game.i18n.localize("FAx.ContextMenu.IncreaseHostile"), action: () => _modifySceneAspectInvokes(aspectId, "hostileInvokes", 1) },
+            { icon: "fa-minus", label: game.i18n.localize("FAx.ContextMenu.DecreaseHostile"), action: () => _modifySceneAspectInvokes(aspectId, "hostileInvokes", -1) }
+        );
+    }
+    const showCharLabel = (() => { try { const v = game.i18n.localize("FAx.Global.ShowCharacter"); return v && !String(v).includes("FAx.") ? v : "Show character"; } catch { return "Show character"; } })();
+    items.push(
+        { icon: isCharacter ? "fa-user" : "fa-book-open", label: isCharacter ? showCharLabel : game.i18n.localize("FAx.ContextMenu.OpenInManager"), action: () => {
+            if (isCharacter) {
+                const actor = game.actors.get(widget.placement.actorId);
+                if (actor) actor.sheet.render(true);
+                else _openAspectManager(aspectId);
+            } else _openAspectManager(aspectId);
+        } }
+    );
+    const layer = canvas.aspects;
+    const isMulti = layer && layer.selectedIds.size > 1 && layer.isSelected(placementId);
+    const canDelete = game.user.isGM || (isCharacter && game.actors.get(widget.placement.actorId)?.isOwner);
+    if (canDelete) {
+        const delLabel = isMulti ? `${game.i18n.localize("FAx.ContextMenu.DeleteDrawing")} (${layer.selectedIds.size})` : game.i18n.localize("FAx.ContextMenu.DeleteDrawing");
+        items.push(
+            { icon: "fa-trash", label: delLabel, action: async () => {
+                if (isMulti && layer.deleteSelected) await layer.deleteSelected();
+                else if (canvas.aspects?.deletePlacement) await canvas.aspects.deletePlacement(placementId);
+                else {
+                    const storage = await AspectStorage.getStorage();
+                    if (!storage) return;
+                    let placements = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS) || []);
+                    placements = placements.filter(p => p.id !== placementId);
+                    await storage.setFlag("fatex-extras", AspectStorage.FLAGS.PLACEMENTS, placements);
+                    game.socket.emit(SOCKET_NAME, { action: "REFRESH_WIDGETS" });
+                    canvas.aspects?.refreshWidgets?.();
+                }
+            } }
+        );
+    }
+    if (isMulti) {
+        items.unshift(
+            { icon: "fa-arrows-alt", label: `Move ${layer.selectedIds.size} selected`, action: async () => {
+                ui.notifications.info(`Drag any selected widget to move all ${layer.selectedIds.size} together (Ctrl+click to add).`);
+            }}
+        );
+    }
+    const menu = document.createElement("div");
+    menu.className = "fatex-context-menu";
+    const { x, y } = _eventClientXY(event);
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    for (const item of items) {
+        const el = document.createElement("div");
+        el.className = "fatex-context-menu__item";
+        el.innerHTML = `<i class="fas ${item.icon}"></i> ${item.label}`;
+        el.addEventListener("click", async () => {
+            _removeAspectContextMenu();
+            try { await item.action(); } catch (err) {
+                console.error("FateX Extras | Error executing aspect context menu action:", err);
+            }
+        });
+        menu.appendChild(el);
+    }
+    document.body.appendChild(menu);
+}
+globalThis._showWidgetContextMenu = _showWidgetContextMenu;
+globalThis._showAspectContextMenuForWidget = _showWidgetContextMenu;
+globalThis._modifySceneAspectInvokes = _modifySceneAspectInvokes;
+
+function _showAspectContextMenu(drawing, event) {
+    event.stopPropagation?.();
+    event.preventDefault?.();
+    _removeAspectContextMenu();
+
+    const aspectId = drawing.document.getFlag("fatex-extras", "aspectId");
+    if (!aspectId) return;
+
+    const items = [
+        { icon: "fa-plus", label: game.i18n.localize("FAx.ContextMenu.IncreaseInvokes"), action: () => _modifySceneAspectInvokes(aspectId, "invokes", 1) },
+        { icon: "fa-minus", label: game.i18n.localize("FAx.ContextMenu.DecreaseInvokes"), action: () => _modifySceneAspectInvokes(aspectId, "invokes", -1) }
+    ];
+    if (game.user.isGM) {
+        items.push(
+            { icon: "fa-plus", label: game.i18n.localize("FAx.ContextMenu.IncreaseHostile"), action: () => _modifySceneAspectInvokes(aspectId, "hostileInvokes", 1) },
+            { icon: "fa-minus", label: game.i18n.localize("FAx.ContextMenu.DecreaseHostile"), action: () => _modifySceneAspectInvokes(aspectId, "hostileInvokes", -1) }
+        );
+    }
+    items.push(
+        { icon: "fa-book-open", label: game.i18n.localize("FAx.ContextMenu.OpenInManager"), action: () => _openAspectManager(aspectId) }
+    );
+    if (game.user.isGM) {
+        items.push(
+            { icon: "fa-trash", label: game.i18n.localize("FAx.ContextMenu.DeleteDrawing"), action: () => drawing.document.delete() }
+        );
+    }
+
+    const menu = document.createElement("div");
+    menu.className = "fatex-context-menu";
+    const { x, y } = _eventClientXY(event);
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+
+    for (const item of items) {
+        const el = document.createElement("div");
+        el.className = "fatex-context-menu__item";
+        el.innerHTML = `<i class="fas ${item.icon}"></i> ${item.label}`;
+        el.addEventListener("click", async () => {
+            _removeAspectContextMenu();
+            try { await item.action(); } catch (err) {
+                console.error("FateX Extras | Error executing aspect context menu action:", err);
+            }
+        });
+        menu.appendChild(el);
+    }
+    document.body.appendChild(menu);
+}
+
+document.addEventListener("click", (event) => {
+    if (!event.target.closest?.(".fatex-context-menu")) _removeAspectContextMenu();
+});
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") _removeAspectContextMenu();
+});
+
+
+document.addEventListener("auxclick", async (event) => {
+    if (event.button !== 1) return;
+    if (!game.user.isGM) return;
+    if (!canvas?.ready || !game.scenes.active) return;
+
+    const target = event.target;
+    if (target.closest?.(".fatex-context-menu") || target.closest?.(".fatex-manager-widget") || target.closest?.("#ui-top") || target.closest?.("#sidebar") || target.closest?.(".window-app")) return;
+    const isOnCanvas = target === canvas.app.view || target.closest?.("#board") || (canvas.app.view && canvas.app.view.contains(target));
+    if (!isOnCanvas) return;
+
+    const world = _clientToCanvas(event.clientX, event.clientY);
+    if (!world) return;
+
+    const hitWidget = (() => {
+        try {
+            const layer = canvas.aspects;
+            if (!layer) return false;
+            for (const w of layer.widgets.values()) {
+                const dims = w._getDimensions?.();
+                if (!dims) continue;
+                const bounds = new PIXI.Rectangle(w.x - dims.w/2, w.y - dims.h/2, dims.w, dims.h);
+                if (bounds.contains(world.x, world.y)) return true;
+            }
+        } catch {}
+        return false;
+    })();
+    if (hitWidget) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    let groups = [];
+    let allTags = [];
+    try {
+        const storage = await AspectStorage.getStorage();
+        if (storage) {
+            groups = storage.getFlag("fatex-extras", AspectStorage.FLAGS.GROUPS) || [];
+            allTags = storage.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || [];
+        }
+    } catch {}
+    const groupOptions = [`<option value="">${game.i18n.localize("FAx.Global.Uncategorized")}</option>`, ...groups.map(g => `<option value="${g.id}">${foundry.utils.escapeHTML(g.label)}</option>`)].join("");
+
+    const previewId = foundry.utils.randomID();
+    const initialAspect = { id: previewId, name: game.i18n.localize("FAx.Global.NewAspect") || "New Aspect", color: "#4a4a4a", tagIds: [], invokes: 0, hostileInvokes: 0, hidden: false };
+    try {
+        const storageForCreate = await AspectStorage.getStorage();
+        if (storageForCreate) {
+            const curAspects = foundry.utils.duplicate(storageForCreate.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+            curAspects.push(foundry.utils.duplicate(initialAspect));
+            await storageForCreate.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, curAspects);
+        }
+    } catch (e) { console.error("FateX Extras | Failed to pre-create aspect for mid-click", e); }
+    const content = `
+        <form class="fatex-desk fatex-scene-aspects" style="padding:8px; background:transparent;">
+            <div class="fatex-item fatex-scene-aspect" data-id="${previewId}" style="border-left:6px solid #4a4a4a; margin:0;">
+                <input type="color" class="aspect-color-trigger" value="#4a4a4a" data-id="${previewId}" data-field="color" title="${game.i18n.localize('FAx.Global.Color')}" style="position:absolute; top:0; left:-6px; width:6px; height:100%; opacity:0; cursor:pointer; z-index:10; border:none; padding:0; margin:0;" onmousedown="event.stopPropagation()" ondragstart="event.preventDefault(); event.stopPropagation(); return false;" onpointerdown="event.stopPropagation()">
+                <div class="fatex-u-pos-relative">
+                    <div class="fatex-row-main">
+                        <textarea id="fatex-new-aspect-name" class="fatex-text-input aspect-name" placeholder="${game.i18n.localize("FAx.Global.AspectName") || "Aspect Name"}" data-id="${previewId}" data-field="name" rows="1" autofocus>${initialAspect.name}</textarea>
+                    </div>
+                    <div class="aspect-tags-list" id="fatex-new-tags-list" style="margin:5px 0; min-height:22px;">
+                        <button type="button" class="add-tag-to-aspect" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.AddTag')}"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div class="fatex-row-details">
+                        <div class="aspect-invokes-wrapper">
+                            <label class="fatex-text-input__label">${game.i18n.localize("FAx.Global.Invokes")}</label>
+                            <div class="invoke-counter">
+                                <i class="fas fa-minus invoke-control" data-action="decrease" data-field="invokes" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.DecreaseInvokes')}"></i>
+                                <span class="invoke-value">0</span>
+                                <i class="fas fa-plus invoke-control" data-action="increase" data-field="invokes" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.IncreaseInvokes')}"></i>
+                            </div>
+                        </div>
+                        <div class="aspect-invokes-wrapper">
+                            <label class="fatex-text-input__label">${game.i18n.localize("FAx.Global.HostileInvokes")}</label>
+                            <div class="invoke-counter hostile">
+                                <i class="fas fa-minus invoke-control" data-action="decrease" data-field="hostileInvokes" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.DecreaseInvokes')}"></i>
+                                <span class="invoke-value">0</span>
+                                <i class="fas fa-plus invoke-control" data-action="increase" data-field="hostileInvokes" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.IncreaseInvokes')}"></i>
+                            </div>
+                        </div>
+                        <div class="aspect-actions-wrapper">
+                            <div class="aspect-item-actions"><i class="fas fa-eye aspect-visibility" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.ToggleVisibility')}"></i> <i class="fas fa-trash aspect-delete" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.Delete')}"></i></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <label style="font-weight:600; font-size:11px; white-space:nowrap;">${game.i18n.localize("FAx.Global.Category") || "Category"}</label>
+                        <select id="fatex-new-aspect-group" style="flex:1;">${groupOptions}</select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    `;
+    let _midClickHandled = false;
+    const _deletePreCreated = async () => {
+        if (_midClickHandled) return;
+        _midClickHandled = true;
+        try {
+            const storage = await AspectStorage.getStorage();
+            if (!storage) return;
+            const aspects = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+            const filtered = aspects.filter(a => a.id !== previewId);
+            if (filtered.length !== aspects.length) await storage.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, filtered);
+        } catch {}
+    };
+    new Dialog({
+        title: game.i18n.localize("FAx.Global.CreateAspect") || "Create Aspect",
+        content,
+        buttons: {
+            create: {
+                icon: '<i class="fas fa-check"></i>',
+                label: game.i18n.localize("FAx.Global.Create") || "Create",
+                callback: async (html) => {
+                    _midClickHandled = true;
+                    const name = html.find("#fatex-new-aspect-name").val()?.trim() || game.i18n.localize("FAx.Global.NewAspect") || "New Aspect";
+                    const groupId = html.find("#fatex-new-aspect-group").val() || "";
+                    const color = html.find(".aspect-color-trigger").val() || "#4a4a4a";
+                    const tagIds = html.find(".aspect-tag-pill").map((_, el) => $(el).data("tag-id")).get().filter(Boolean);
+
+                    try {
+                        const storage = await AspectStorage.getStorage();
+                        if (storage) {
+                            const aspects = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                            const asp = aspects.find(a => a.id === previewId);
+                            if (asp) {
+                                asp.name = name;
+                                asp.color = color;
+                                asp.tagIds = tagIds;
+                                if (groupId) asp.groupId = groupId;
+                                else delete asp.groupId;
+                                await storage.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, aspects);
+                            }
+                        }
+                        if (canvas.aspects?.createPlacement) {
+                            await canvas.aspects.createPlacement(previewId, world.x, world.y);
+                        }
+                        ui.notifications.info(game.i18n.format("FAx.Global.AspectAddedToScene", { name }));
+                    } catch (e) {
+                        console.error("FateX Extras | Failed to finalize aspect via middle-click", e);
+                    }
+                }
+            },
+            cancel: { icon: '<i class="fas fa-times"></i>', label: game.i18n.localize("Cancel") || "Cancel", callback: async () => { await _deletePreCreated(); } }
+        },
+        default: "create",
+        close: async () => { await _deletePreCreated(); },
+        render: (html) => {
+            html.find("#fatex-new-aspect-name").focus();
+            html.find("#fatex-new-aspect-name").on("input", function() {
+                this.style.height = "auto";
+                this.style.height = (this.scrollHeight) + "px";
+
+                (async () => {
+                    try {
+                        const storage = await AspectStorage.getStorage();
+                        if (!storage) return;
+                        const aspects = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                        const asp = aspects.find(a => a.id === previewId);
+                        if (asp) { asp.name = $(this).val(); await storage.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, aspects); }
+                    } catch {}
+                })();
+            });
+            html.find("#fatex-new-aspect-name").on("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    html.find(".dialog-button.create").click();
+                }
+            });
+            html.find(".aspect-color-trigger").on("input", async (e) => {
+                const col = e.target.value;
+                html.find(".fatex-scene-aspect").css("border-left-color", col);
+                try {
+                    const storage = await AspectStorage.getStorage();
+                    if (!storage) return;
+                    const aspects = foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                    const asp = aspects.find(a => a.id === previewId);
+                    if (asp) { asp.color = col; await storage.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, aspects); }
+                } catch {}
+            });
+
+            const renderPills = async () => {
+                try {
+                    const storage = await AspectStorage.getStorage();
+                    if (!storage) return;
+                    const aspects = storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || [];
+                    const asp = aspects.find(a => a.id === previewId);
+                    const curTagIds = asp ? (asp.tagIds || []) : [];
+                    let $list = html.find(".aspect-tags-list");
+
+                    $list.find(".aspect-tag-pill").remove();
+
+                    if (!$list.find("button.add-tag-to-aspect").length) {
+                        $list.append(`<button type="button" class="add-tag-to-aspect" data-id="${previewId}" title="${game.i18n.localize('FAx.Global.AddTag')}"><i class="fas fa-plus"></i></button>`);
+                    }
+                    curTagIds.forEach(tid => {
+                        const t = allTags.find(x => x.id === tid);
+                        if (!t) return;
+                        const $pill = $(`<span class="aspect-tag-pill" data-tag-id="${t.id}" style="background-color:${t.color}">${t.label} <i class="fas fa-times aspect-tag-remove" data-tag-id="${t.id}"></i></span>`);
+                        $pill.find(".aspect-tag-remove").on("click", async () => {
+                            try {
+                                const st = await AspectStorage.getStorage();
+                                if (!st) return;
+                                const as = foundry.utils.duplicate(st.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                                const a = as.find(x => x.id === previewId);
+                                if (a && a.tagIds) {
+                                    a.tagIds = a.tagIds.filter(x => x !== t.id);
+                                    await st.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, as);
+                                    renderPills();
+                                }
+                            } catch {}
+                        });
+                        $list.append($pill);
+                    });
+
+                    const $addBtn = $list.find("button.add-tag-to-aspect");
+                    $list.append($addBtn);
+                    if ($addBtn.length) $addBtn.show();
+                } catch {}
+            };
+
+            renderPills();
+
+                    html.find(".invoke-control").css({ opacity: 1, pointerEvents: "auto" }).off("click").on("click", async (e) => {
+                        const btn = e.currentTarget;
+                        const field = btn.dataset.field || "invokes";
+                        const action = btn.dataset.action;
+                        try {
+                            const st = await AspectStorage.getStorage();
+                            if (!st) return;
+                            const as = foundry.utils.duplicate(st.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                            const a = as.find(x => x.id === previewId);
+                            if (!a) return;
+                            if (action === "increase") a[field] = (a[field] || 0) + 1;
+                            else a[field] = Math.max(0, (a[field] || 0) - 1);
+                            await st.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, as);
+
+                            const $val = $(btn).siblings(".invoke-value").first();
+                            if ($val.length) $val.text(a[field]);
+                            else $(btn).parent().find(".invoke-value").text(a[field]);
+                        } catch {}
+                    });
+                    html.find(".aspect-visibility, .aspect-delete").css({ opacity: 1, pointerEvents: "auto" }).off("click").on("click", async (e) => {
+                        const isVis = e.currentTarget.classList.contains("aspect-visibility");
+                        if (isVis) {
+                            try {
+                                const st = await AspectStorage.getStorage();
+                                const as = foundry.utils.duplicate(st.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                                const a = as.find(x => x.id === previewId);
+                                if (a) { a.hidden = !a.hidden; await st.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, as); }
+                            } catch {}
+                        } else {
+                            const ok = await Dialog.confirm({ title: game.i18n.localize("FAx.Global.DeleteAspectTitle"), content: `<p>${game.i18n.localize("FAx.Global.DeleteAspectConfirm")}</p>`, defaultYes: false });
+                            if (ok) {
+                                try {
+                                    const st = await AspectStorage.getStorage();
+                                    const as = foundry.utils.duplicate(st.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                                    const filtered = as.filter(x => x.id !== previewId);
+                                    await st.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, filtered);
+
+                                    html.closest(".app").find(".dialog-button.cancel").click();
+                                } catch {}
+                            }
+                        }
+                    });
+
+                    const $addBtn = html.find(`.add-tag-to-aspect[data-id="${previewId}"]`);
+                    if ($addBtn.length && !$addBtn.is(":visible")) $addBtn.show();
+                    html.find(`.add-tag-to-aspect[data-id="${previewId}"]`).off("click.fatexAddTag").on("click.fatexAddTag", async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                try {
+                    const st = await AspectStorage.getStorage();
+                    if (st) allTags = st.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || allTags;
+                } catch {}
+                const storageForTags = await AspectStorage.getStorage();
+                const curAspects = storageForTags ? (storageForTags.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []) : [];
+                const curAsp = curAspects.find(a => a.id === previewId);
+                const curTagIds = curAsp ? (curAsp.tagIds || []) : [];
+                const available = allTags.filter(t => !curTagIds.includes(t.id));
+                let pickerHtml = `<div class="fatex-tag-picker">`;
+                if (available.length) {
+                    pickerHtml += `<label><b>${game.i18n.localize("FAx.Global.PickExistingTag") || "Pick Existing Tag"}</b></label><div class="tag-list-scroll">`;
+                    available.forEach(t => { pickerHtml += `<button type="button" class="fatex-tag-pick" data-id="${t.id}" style="text-align:left; padding:6px 8px; background:${t.color}; color:white; border:none; border-radius:4px; cursor:pointer; margin-bottom:4px; width:100%;"><i class="fas fa-tag" style="margin-right:6px;"></i>${foundry.utils.escapeHTML(t.label)}</button>`; });
+                    pickerHtml += `</div><hr>`;
+                } else if (!allTags.length) {
+                    pickerHtml += `<p style="font-size:11px; opacity:0.6;">${game.i18n.localize("FAx.Global.NoTags") || "No tags defined"}</p><hr>`;
+                } else {
+                    pickerHtml += `<p style="font-size:11px; opacity:0.6;">All tags already added</p><hr>`;
+                }
+                pickerHtml += `<label><b>${game.i18n.localize("FAx.Global.CreateNewTag") || "Create New Tag"}</b></label><div class="form-group"><input type="text" id="fatex-pick-new-tag-name" placeholder="${game.i18n.localize("FAx.Global.TagName") || "Tag Name"}" style="width:100%; margin-bottom:6px;"><div style="display:flex; align-items:center; gap:8px;"><label>${game.i18n.localize("FAx.Global.Color") || "Color"}:</label> <input type="color" id="fatex-pick-new-tag-color" value="#7a7a7a" style="width:40px; height:28px; padding:2px; cursor:pointer;"></div></div></div>`;
+                const pickDialog = new Dialog({
+                    title: game.i18n.localize("FAx.Global.AddTag") || "Add Tag",
+                    content: pickerHtml,
+                    buttons: {
+                        create: {
+                            icon: '<i class="fas fa-plus"></i>',
+                            label: game.i18n.localize("FAx.Global.CreateAndAdd") || "Create & Add",
+                            callback: async (html2) => {
+                                const name = html2.find("#fatex-pick-new-tag-name").val()?.trim();
+                                const color = html2.find("#fatex-pick-new-tag-color").val() || "#7a7a7a";
+                                if (!name) return;
+                                const newTag = { id: foundry.utils.randomID(), label: name, color };
+                                allTags.push(newTag);
+                                try {
+                                    const storage = await AspectStorage.getStorage();
+                                    if (storage) {
+                                        const currentTags = storage.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || [];
+                                        currentTags.push(newTag);
+                                        await storage.setFlag("fatex-extras", AspectStorage.FLAGS.TAGS, currentTags);
+                                    }
+                                } catch {}
+                                await _addTagToPreview(newTag.id);
+                                renderPills();
+                            }
+                        },
+                        close: { label: game.i18n.localize("Close") || "Close" }
+                    },
+                    render: ($h) => {
+                        $h.find(".fatex-tag-pick").on("click", async (ev) => {
+                            const tid = $(ev.currentTarget).data("id");
+                            await _addTagToPreview(tid);
+                            renderPills();
+                            pickDialog.close();
+                        });
+                    }
+                }, { width: 380 });
+                pickDialog.render(true);
+            });
+            const _addTagToPreview = async (tagId) => {
+                try {
+                    const st = await AspectStorage.getStorage();
+                    if (!st) return;
+                    const as = foundry.utils.duplicate(st.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []);
+                    const a = as.find(x => x.id === previewId);
+                    if (!a) return;
+                    a.tagIds = a.tagIds || [];
+                    if (!a.tagIds.includes(tagId)) a.tagIds.push(tagId);
+                    await st.setFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS, as);
+                } catch {}
+            };
+        }
+    }, { width: 520 }).render(true);
+}, true);

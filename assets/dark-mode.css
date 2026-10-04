@@ -26,6 +26,15 @@ body.fatex-dark-mode .window-app {
     box-shadow: 0 0 10px rgba(0,0,0,0.5) !important;
 }
 
+body.fatex-dark-mode .fatex-manager-widget {
+    background: var(--fx-dark-bg-panel) !important;
+    border-color: var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .fatex-manager-widget__body {
+    background: var(--fx-dark-bg-app) !important;
+}
+
 body.fatex-dark-mode .window-app .window-header,
 body.fatex-dark-mode .fatex-header {
     background: var(--fx-dark-bg-header) !important;
@@ -603,4 +612,72 @@ body.fatex-dark-mode select {
 body.fatex-dark-mode option {
     background: var(--fx-dark-bg-panel) !important;
     color: var(--fx-dark-text-main) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-toolbar {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-bottom: 1px solid var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-search {
+    background: var(--fx-dark-bg-input) !important;
+    color: var(--fx-dark-text-main) !important;
+    border: 1px solid var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-search:focus {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-toolbar-actions button {
+    background: var(--fx-dark-bg-element) !important;
+    color: var(--fx-dark-text-muted) !important;
+    border: 1px solid var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-toolbar-actions button:hover {
+    background: var(--fx-dark-border-light) !important;
+    color: #fff !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-empty-state {
+    color: var(--fx-dark-text-muted) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-empty-state .create-aspect {
+    background: var(--fx-dark-bg-element) !important;
+    color: var(--fx-dark-text-main) !important;
+    border: 1px solid var(--fx-dark-border) !important;
+}
+
+body.fatex-dark-mode .fatex-scene-aspects .fatex-empty-state .create-aspect:hover {
+    background: var(--fx-dark-border-light) !important;
+}
+
+body.fatex-dark-mode .fatex-drag-scene-handle {
+    background: var(--fx-dark-bg-element) !important;
+    border-color: var(--fx-dark-border) !important;
+    color: var(--fx-dark-text-muted) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+}
+body.fatex-dark-mode .fatex-drag-scene-handle.fatex-drag--consequence {
+    color: #e06a6a !important;
+    border-color: rgba(224, 106, 106, 0.5) !important;
+}
+body.fatex-dark-mode .fatex-drag-scene-handle.fatex-drag--aspect {
+    color: #9aa0a6 !important;
+    border-color: var(--fx-dark-border) !important;
+}
+body.fatex-dark-mode .fatex-drag-scene-handle:hover {
+    background: var(--fx-dark-border-light) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+body.fatex-dark-mode .fatex-drag-scene-handle.fatex-drag--consequence:hover {
+    background: #b83636 !important;
+    color: white !important;
+}
+body.fatex-dark-mode .fatex-drag-scene-handle.fatex-drag--aspect:hover {
+    background: #6b7280 !important;
+    color: white !important;
 }

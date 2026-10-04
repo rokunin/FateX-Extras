@@ -12,6 +12,8 @@
             "Other": "Other",
             "Invokes": "Free Invokes",
             "HostileInvokes": "GM Invokes",
+            "CreateAspect": "Create Aspect",
+            "Create": "Create",
             "NoAspects": "No scene aspects created yet.",
             "AddCategory": "New Category",
             "DeleteAspectTitle": "Delete Aspect",
@@ -40,7 +42,35 @@
             "Collapse": "Collapse",
             "Expand": "Expand",
             "DragToScene": "Drag to scene to create text note",
-            "AspectAddedToScene": "Added '{name}' to scene"
+            "AspectAddedToScene": "Added '{name}' to scene",
+            "SearchAspects": "Search aspects...",
+            "CollapseAll": "Collapse All",
+            "ExpandAll": "Expand All",
+            "CreateGroup": "Create Category",
+            "ToggleVisibility": "Toggle Visibility",
+            "RemoveTag": "Remove Tag",
+            "IncreaseInvokes": "Increase Invokes",
+            "DecreaseInvokes": "Decrease Invokes",
+            "WaitingForGM": "Aspects not initialized yet. Ask the GM to open the Aspect Manager."
+        },
+        "Keybindings": {
+            "OpenSceneAspects": "Toggle Aspect Manager",
+            "OpenSceneAspectsHint": "Open or close the Scene Aspect Manager window."
+        },
+        "Manager": {
+            "PlacePanel": "Place Aspect Manager on Canvas",
+            "AlreadyPlaced": "Aspect Manager is already placed on this scene",
+            "NoCanvas": "Canvas is not ready",
+            "RemoveConfirm": "Remove this manager panel from the scene? (Aspects stay in the journal)",
+            "RemoveManager": "Remove Manager Panel"
+        },
+        "ContextMenu": {
+            "IncreaseInvokes": "+1 Free Invoke",
+            "DecreaseInvokes": "-1 Free Invoke",
+            "IncreaseHostile": "+1 GM Invoke",
+            "DecreaseHostile": "-1 GM Invoke",
+            "OpenInManager": "Open in Manager",
+            "DeleteDrawing": "Delete from Scene"
         },
         "Dice": {
             "SystemName": "FateX Extras"
@@ -58,6 +88,8 @@
             "SceneDrawingShowHostileHint": "Display GM invokes counter on canvas",
             "SceneDrawingShowInvokes": "Show Free Invokes on Canvas",
             "SceneDrawingShowInvokesHint": "Display free invokes counter on canvas",
+            "SceneDrawingCompactInvokes": "Compact Invokes on Canvas",
+            "SceneDrawingCompactInvokesHint": "Display invokes as '+ / -' instead of 'Free Invokes / GM Invokes' on canvas",
             "SceneDrawingStrokeColor": "Aspect Frame Color",
             "SceneDrawingStrokeColorHint": "Color of the aspect frame/border",
             "SceneDrawingStrokeAlpha": "Aspect Frame Opacity",

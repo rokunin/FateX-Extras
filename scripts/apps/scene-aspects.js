@@ -1,6 +1,12 @@
 import { AspectStorage } from "../helpers/aspect-storage.js";
 
 export class SceneAspectsApp extends FormApplication {
+    constructor(options = {}) {
+        super({}, options);
+        this.focusAspectId = options.focusAspectId || null;
+        this.searchQuery = "";
+    }
+
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             id: "fatex-scene-aspects",
@@ -19,6 +25,36 @@ export class SceneAspectsApp extends FormApplication {
         });
     }
 
+    _getHeaderButtons() {
+        const buttons = super._getHeaderButtons();
+        if (game.user.isGM) {
+            buttons.unshift(
+                {
+                    label: "",
+                    class: "place-on-canvas",
+                    icon: "fas fa-map-pin",
+                    tooltip: "FAx.Manager.PlacePanel",
+                    onclick: () => {}
+                },
+                {
+                    label: "",
+                    class: "manage-tags",
+                    icon: "fas fa-tags",
+                    tooltip: "FAx.Global.ManageTags",
+                    onclick: (event) => this._onManageTags(event)
+                },
+                {
+                    label: "",
+                    class: "create-group",
+                    icon: "fas fa-folder-plus",
+                    tooltip: "FAx.Global.CreateGroup",
+                    onclick: (event) => this._onCreateGroup(event)
+                }
+            );
+        }
+        return buttons;
+    }
+
     _autoResizeTextareas() {
         this.element.find("textarea.aspect-name").each(function() {
             this.style.height = "auto";
@@ -33,14 +69,14 @@ export class SceneAspectsApp extends FormApplication {
 
     async getData() {
         const storage = await AspectStorage.getStorage();
-        
+
         const aspects = storage ? (storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []) : [];
         const groups = storage ? (storage.getFlag("fatex-extras", AspectStorage.FLAGS.GROUPS) || []) : [];
         const globalTags = storage ? (storage.getFlag("fatex-extras", AspectStorage.FLAGS.TAGS) || []) : [];
 
         const filteredAspects = game.user.isGM ? aspects : aspects.filter(a => !a.hidden);
         const filteredGroups = game.user.isGM ? groups : groups.filter(g => !g.hidden);
-        
+
         const groupedData = filteredGroups.map(g => {
             return {
                 ...g,
@@ -50,7 +86,7 @@ export class SceneAspectsApp extends FormApplication {
                 })
             };
         });
-        
+
         const orphanAspects = filteredAspects.filter(a => !a.groupId || !groups.some(g => g.id === a.groupId)).map(a => {
             const aspectTags = (a.tagIds || []).map(tid => globalTags.find(t => t.id === tid)).filter(t => !!t);
             return { ...a, displayTags: aspectTags, isGM: game.user.isGM };
@@ -60,9 +96,9 @@ export class SceneAspectsApp extends FormApplication {
             groupedData.push({ id: "default", label: game.i18n.localize("FAx.Global.Uncategorized"), aspects: orphanAspects });
         }
 
-        return { 
-            groups: groupedData, 
-            globalTags: globalTags, 
+        return {
+            groups: groupedData,
+            globalTags: globalTags,
             isGM: game.user.isGM,
             waitingForGM: !storage && !game.user.isGM
         };
@@ -70,13 +106,76 @@ export class SceneAspectsApp extends FormApplication {
 
     activateListeners(html) {
         super.activateListeners(html);
-        html.find(".create-group").on("click", (e) => this._onCreateGroup(e));
+
+
+        const $frame = html.closest(".window-app");
+        if ($frame.length) html.find(".fatex-header").hide();
+
+        $frame.find(".header-button.place-on-canvas").each((_, el) => {
+
+            el.addEventListener("pointerdown", (e) => e.stopPropagation(), true);
+            el.setAttribute("draggable", "true");
+            el.addEventListener("dragstart", (event) => {
+                event.stopPropagation();
+                event.dataTransfer.setData("text/plain", JSON.stringify({ type: "PlaceAspectManager" }));
+                event.dataTransfer.effectAllowed = "copy";
+            }, true);
+        });
+
+        html.find(".aspect-color-trigger").each((_, el) => {
+            el.addEventListener("pointerdown", (e) => e.stopPropagation(), true);
+            el.addEventListener("mousedown", (e) => e.stopPropagation());
+            el.addEventListener("dragstart", (e) => { e.preventDefault(); e.stopPropagation(); return false; }, true);
+        });
+        html.find(".fatex-scene-aspect").each((_, el) => {
+            el.addEventListener("dragstart", (e) => {
+                if (e.target.classList.contains("aspect-color-trigger") || e.target.closest?.(".aspect-color-trigger")) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+
+                if (e.target.closest?.(".aspect-name, .aspect-tag-pill, .add-tag-to-aspect, .invoke-control, .aspect-item-actions, input, button")) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true);
+        });
+
+        html.find(".fatex-scene-aspect").each((_, el) => {
+            el.setAttribute("draggable", "true");
+        });
+        html.find(".fatex-scene-aspects .create-group").on("click", (e) => this._onCreateGroup(e));
         html.find(".group-label").on("change", (e) => this._onUpdateGroupLabel(e));
         html.find(".group-delete").on("click", (e) => this._onDeleteGroup(e));
         html.find(".group-visibility").on("click", (e) => this._onToggleGroupVisibility(e));
         html.find(".group-collapse").on("click", (e) => this._onToggleGroupCollapse(e));
-        html.find(".manage-tags").on("click", (e) => this._onManageTags(e));
-        html.find(".aspect-color-trigger").on("change", (e) => this._onUpdateAspect(e));
+        html.find(".fatex-scene-aspects .manage-tags").on("click", (e) => this._onManageTags(e));
+
+        html.find(".aspect-color-trigger").on("input", function() {
+            const value = this.value;
+            const $card = $(this).closest(".fatex-scene-aspect");
+            if ($card.length) $card.css("border-left-color", value);
+        }).on("change", (e) => this._onUpdateAspect(e));
+
+        html.find(".aspect-color-trigger").on("focus", function() {
+            const $card = $(this).closest(".fatex-scene-aspect");
+            $card.attr("draggable", "false");
+            if (!$card.find(".fatex-color-backdrop").length) {
+                $card.append(`<div class="fatex-color-backdrop" style="position:absolute; inset:0; z-index:5; cursor:default; background:transparent;"></div>`);
+                $card.find(".fatex-color-backdrop").on("click", function(e) {
+                    e.stopPropagation();
+                    $(this).remove();
+                    $card.attr("draggable", "true");
+                });
+            }
+        });
+        html.find(".aspect-color-trigger").on("blur change", function() {
+            const $card = $(this).closest(".fatex-scene-aspect");
+            $card.attr("draggable", "true");
+            $card.find(".fatex-color-backdrop").remove();
+        });
         html.find(".create-aspect").on("click", (e) => this._onCreateAspect(e));
         html.find(".aspect-delete").on("click", (e) => this._onDeleteAspect(e));
         html.find(".aspect-name").on("change", (e) => this._onUpdateAspect(e));
@@ -90,7 +189,67 @@ export class SceneAspectsApp extends FormApplication {
             this.style.height = "auto";
             this.style.height = (this.scrollHeight) + "px";
         });
+
+
+        if (!this._autosizeBound) {
+            this._autosizeBound = true;
+            const rootEl = html.closest(".window-content")[0] || html[0];
+            if (rootEl && window.ResizeObserver) {
+                const flowNames = () => {
+                    rootEl.querySelectorAll("textarea.aspect-name").forEach((ta) => {
+                        ta.style.height = "auto";
+                        ta.style.height = `${ta.scrollHeight}px`;
+                    });
+                };
+                new ResizeObserver(flowNames).observe(rootEl);
+            }
+        }
         html.find(".invoke-control").on("click", (e) => this._onModifyInvokes(e));
+        html.find(".fatex-search").on("input", (e) => {
+            this.searchQuery = e.target.value.trim().toLowerCase();
+            this._applySearch(html);
+        });
+        html.find(".collapse-all").on("click", (e) => this._onToggleAllGroups(e, true));
+        html.find(".expand-all").on("click", (e) => this._onToggleAllGroups(e, false));
+
+        if (this.searchQuery) {
+            html.find(".fatex-search").val(this.searchQuery);
+            this._applySearch(html);
+        }
+
+        if (this.focusAspectId) {
+            const target = html.find(`.fatex-scene-aspect[data-id="${this.focusAspectId}"]`);
+            if (target.length) {
+                target.closest(".fatex-group-content").removeClass("is-collapsed");
+                target.closest(".fatex-group-header").find(".group-collapse").removeClass("fa-chevron-right").addClass("fa-chevron-down");
+                target.addClass("fatex-focus");
+                target[0].scrollIntoView({ behavior: "smooth", block: "center" });
+                setTimeout(() => target.removeClass("fatex-focus"), 2500);
+            }
+            this.focusAspectId = null;
+        }
+    }
+
+    _applySearch(html) {
+        const query = this.searchQuery;
+        html.find(".fatex-scene-aspect").each(function() {
+            const $el = $(this);
+            const name = ($el.find(".aspect-name").val() || "").toLowerCase();
+            const tags = $el.find(".aspect-tag-pill").map((_, p) => $(p).text()).get().join(" ").toLowerCase();
+            $el.toggle(query === "" || name.includes(query) || tags.includes(query));
+        });
+        html.find(".fatex-aspect-group").each(function() {
+            const $group = $(this);
+            const visible = $group.find(".fatex-scene-aspect").is(":visible");
+            $group.toggle(query === "" || visible);
+        });
+    }
+
+    async _onToggleAllGroups(event, collapse) {
+        if (!game.user.isGM) return;
+        const groups = await this._getGroups();
+        groups.forEach(g => { g.collapsed = !!collapse; });
+        await this._saveGroups(groups);
     }
 
     async _onManageTags(event) {
@@ -257,13 +416,13 @@ export class SceneAspectsApp extends FormApplication {
         const groupId = event.currentTarget.dataset.groupId;
         const confirm = await Dialog.confirm({ title: game.i18n.localize("FAx.Global.DeleteCategory"), content: game.i18n.localize("FAx.Global.DeleteCategoryConfirm"), defaultYes: false });
         if (!confirm) return;
-        
+
         let groups = await this._getGroups();
         groups = groups.filter(g => g.id !== groupId);
-        
+
         let aspects = await this._getAspects();
         aspects = aspects.filter(a => a.groupId !== groupId);
-        
+
         await this._saveAll(aspects, groups);
     }
 
@@ -271,7 +430,7 @@ export class SceneAspectsApp extends FormApplication {
         if (!game.user.isGM) return;
         const confirm = await Dialog.confirm({ title: game.i18n.localize("FAx.Global.DeleteAspectTitle"), content: game.i18n.localize("FAx.Global.DeleteAspectConfirm"), defaultYes: false });
         if (!confirm) return;
-        
+
         let aspects = await this._getAspects();
         aspects = aspects.filter(a => a.id !== event.currentTarget.dataset.id);
         await this._saveAspects(aspects);
@@ -293,20 +452,22 @@ export class SceneAspectsApp extends FormApplication {
             const field = btn.dataset.field || "invokes";
             if (btn.dataset.action === "increase") aspect[field] = (aspect[field] || 0) + 1;
             else aspect[field] = Math.max(0, (aspect[field] || 0) - 1);
+            applyAspectInvokeValue(aspect.id, field, aspect[field]);
+            game.socket.emit("module.fatex-extras", { action: "REFRESH_INVOKES", aspectId: aspect.id, field, value: aspect[field] });
             await this._saveAspects(aspects);
         }
     }
 
     async _updateObject(event, formData) {}
 
-    async _getGroups() { 
+    async _getGroups() {
         const storage = await AspectStorage.getStorage();
-        return storage ? foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.GROUPS) || []) : []; 
+        return storage ? foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.GROUPS) || []) : [];
     }
-    
-    async _getAspects() { 
+
+    async _getAspects() {
         const storage = await AspectStorage.getStorage();
-        return storage ? foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []) : []; 
+        return storage ? foundry.utils.duplicate(storage.getFlag("fatex-extras", AspectStorage.FLAGS.ASPECTS) || []) : [];
     }
 
     async _saveGroups(groups) { await this._saveAll(null, groups); }
@@ -321,13 +482,13 @@ export class SceneAspectsApp extends FormApplication {
 
         if (aspects !== null) {
             await storage.setFlag("fatex-extras", "sceneAspects", aspects);
-            
+
             if (game.user.isGM) {
                 for (const aspect of aspects) {
                     await this._updateAspectDrawingsLocal(aspect);
                 }
             }
-            
+
             for (const aspect of aspects) {
                 game.socket.emit("module.fatex-extras", {
                     action: "UPDATE_ASPECT_DRAWINGS",
@@ -337,43 +498,54 @@ export class SceneAspectsApp extends FormApplication {
         }
         if (groups !== null) await storage.setFlag("fatex-extras", "sceneAspectGroups", groups);
         if (tags !== null) await storage.setFlag("fatex-extras", "sceneAspectTags", tags);
-        
+
         game.socket.emit("module.fatex-extras", { action: "REFRESH_APPS" });
     }
-    
+
     async _updateAspectDrawingsLocal(aspect) {
         const scene = game.scenes.active;
         if (!scene) return;
-        
+
         const storage = await AspectStorage.getStorage();
         const allTags = storage?.getFlag("fatex-extras", "sceneAspectTags") || [];
         const aspectTags = (aspect.tagIds || []).map(tid => allTags.find(t => t.id === tid)).filter(Boolean);
-        
+
         const showTags = game.settings.get("fatex-extras", "sceneDrawingShowTags") ?? true;
         const showInvokes = game.settings.get("fatex-extras", "sceneDrawingShowInvokes") ?? true;
         const showHostile = game.settings.get("fatex-extras", "sceneDrawingShowHostile") ?? true;
-        
+        const compactInvokes = game.settings.get("fatex-extras", "sceneDrawingCompactInvokes") ?? false;
+
         const tagsText = (showTags && aspectTags.length > 0) ? `[${aspectTags.map(t => t.label).join(' | ')}]` : '';
-        
+
         let invokesLine = '';
         if (showInvokes || showHostile) {
-            const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
-            const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
-            
-            if (showInvokes && showHostile) {
-                invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
-            } else if (showInvokes) {
-                invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+            if (compactInvokes) {
+                if (showInvokes && showHostile) {
+                    invokesLine = `${"+".repeat(aspect.invokes || 0)} | ${"-".repeat(aspect.hostileInvokes || 0)}`;
+                } else if (showInvokes) {
+                    invokesLine = "+".repeat(aspect.invokes || 0);
+                } else {
+                    invokesLine = "-".repeat(aspect.hostileInvokes || 0);
+                }
             } else {
-                invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+                const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
+                const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
+
+                if (showInvokes && showHostile) {
+                    invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+                } else if (showInvokes) {
+                    invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
+                } else {
+                    invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
+                }
             }
         }
-        
+
         const text = aspect.name + (tagsText ? '\n' + tagsText : '') + (invokesLine ? '\n' + invokesLine : '');
         const fillColor = aspect.color || "#4a4a4a";
-        
+
         const drawings = scene.drawings.filter(d => d.getFlag("fatex-extras", "isAspectDrawing") && d.getFlag("fatex-extras", "aspectId") === aspect.id);
-        
+
         for (const drawing of drawings) {
             const height = drawing.shape.height;
             const fontSize = Math.min(64, Math.max(10, Math.round(height * 0.18)));
@@ -398,7 +570,7 @@ export class SceneAspectsApp extends FormApplication {
 
     _onDragOver(event) {
         event.preventDefault();
-        
+
         const clearIndicators = () => {
             this.element.find(".fatex-scene-aspect, .fatex-aspect-group, .aspect-tag-pill").removeClass("drag-left drag-right");
         };
@@ -411,13 +583,13 @@ export class SceneAspectsApp extends FormApplication {
                 if (event.clientX < rect.left + rect.width / 2) tagPill.classList.add("drag-left");
                 else tagPill.classList.add("drag-right");
             }
-        } 
+        }
         else if (this._dragType === "group") {
             const group = event.target.closest(".fatex-aspect-group");
-            
+
             if (!group) {
                 clearIndicators();
-                return; 
+                return;
             }
 
             const draggedId = JSON.parse(event.dataTransfer.getData("text/plain") || "{}").id;
@@ -429,9 +601,9 @@ export class SceneAspectsApp extends FormApplication {
             if (group.classList.contains(newClass)) return;
 
             clearIndicators();
-            
+
             group.classList.add(newClass);
-        } 
+        }
         else if (this._dragType === "aspect") {
             const aspect = event.target.closest(".fatex-scene-aspect");
             if (aspect) {
@@ -459,7 +631,7 @@ export class SceneAspectsApp extends FormApplication {
             const groups = await this._getGroups();
             const sourceIndex = groups.findIndex(g => g.id === data.id);
             const targetGroup = event.target.closest(".fatex-aspect-group");
-            
+
             if (!targetGroup) {
                 if (sourceIndex > -1) {
                     const [item] = groups.splice(sourceIndex, 1);
@@ -522,4 +694,11 @@ export class SceneAspectsApp extends FormApplication {
         }
         this._dragType = null;
     }
+}
+
+export function applyAspectInvokeValue(aspectId, field, value) {
+    if (!aspectId || !field) return;
+    document.querySelectorAll(`.fatex-scene-aspect[data-id="${CSS.escape(aspectId)}"] .invoke-counter[data-field="${field}"] .invoke-value`).forEach(el => {
+        el.textContent = String(value ?? 0);
+    });
 }

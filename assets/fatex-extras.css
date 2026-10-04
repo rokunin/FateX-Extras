@@ -36,6 +36,62 @@
     gap: 10px;
 }
 
+#fatex-scene-aspects.window-app .window-header {
+    flex: 0 0 38px;
+    padding: 7px 12px !important;
+    gap: 4px;
+    background: #2f3542;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#fatex-scene-aspects.window-app .window-header .window-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+}
+
+#fatex-scene-aspects.window-app .window-header .window-title::before {
+    content: "\f518";
+    font-family: "Font Awesome 6 Pro";
+    font-weight: 900;
+}
+
+#fatex-scene-aspects.window-app .window-header .header-button {
+    color: #fff;
+    opacity: 0.9;
+    cursor: pointer;
+    margin: 0;
+    padding: 4px 7px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.10);
+    font-size: 0;
+    text-shadow: none;
+}
+
+#fatex-scene-aspects.window-app .window-header .header-button i {
+    font-size: 13px;
+}
+
+#fatex-scene-aspects.window-app .window-header .header-button:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+#fatex-scene-aspects.window-app .window-header .header-button.place-on-canvas {
+    cursor: grab;
+}
+
+#fatex-scene-aspects.window-app .fatex-scene-aspects .fatex-header {
+    display: none;
+}
+
 .fatex-tag-manager {
     display: flex;
     flex-direction: column;
@@ -198,20 +254,44 @@
     left: -6px;
     width: 6px;
     height: 100%;
-    padding: 0;
-    margin: 0;
-    border: none;
     opacity: 0;
     cursor: pointer;
     z-index: 10;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: block;
 }
 
 .fatex-scene-aspects .fatex-scene-aspect.drag-left {
-    box-shadow: -4px 0 0 var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2);
+    box-shadow: inset 6px 0 0 rgba(255,255,255,0.2);
+    position: relative;
 }
-
+.fatex-scene-aspects .fatex-scene-aspect.drag-left::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--color-shadow-primary, #ff6400);
+    border-radius: 2px;
+    box-shadow: 0 0 6px var(--color-shadow-primary, #ff6400);
+}
 .fatex-scene-aspects .fatex-scene-aspect.drag-right {
-    box-shadow: 4px 0 0 var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2);
+    box-shadow: inset 6px 0 0 rgba(255,255,255,0.2);
+    position: relative;
+}
+.fatex-scene-aspects .fatex-scene-aspect.drag-right::after {
+    content: "";
+    position: absolute;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--color-shadow-primary, #ff6400);
+    border-radius: 2px;
+    box-shadow: 0 0 6px var(--color-shadow-primary, #ff6400);
 }
 
 .fatex-scene-aspects .fatex-aspect-group.drag-left {
@@ -472,4 +552,168 @@
 
 .create-group:hover, .manage-tags:hover {
     text-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.fatex-scene-aspects .fatex-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.04);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.fatex-scene-aspects .fatex-search {
+    flex: 1;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+}
+
+.fatex-scene-aspects .fatex-search:focus {
+    outline: none;
+    border-color: var(--color-shadow-primary, #ff6400);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.fatex-scene-aspects .fatex-toolbar-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.fatex-scene-aspects .fatex-toolbar-actions button {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    cursor: pointer;
+    color: #7a7971;
+    font-size: 11px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.fatex-scene-aspects .fatex-toolbar-actions button:hover {
+    background: rgba(0, 0, 0, 0.15);
+    color: #000;
+}
+
+.fatex-scene-aspects .fatex-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #7a7971;
+}
+
+.fatex-scene-aspects .fatex-empty-state i {
+    font-size: 40px;
+    opacity: 0.4;
+}
+
+.fatex-scene-aspects .fatex-empty-state p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.fatex-scene-aspects .fatex-empty-state small {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.fatex-scene-aspects .fatex-empty-state .create-aspect {
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.fatex-scene-aspects .fatex-empty-state .create-aspect:hover {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.fatex-scene-aspects .fatex-scene-aspect.fatex-focus {
+    animation: fatex-focus-flash 2.5s ease;
+}
+
+@keyframes fatex-focus-flash {
+    0%, 60% { box-shadow: 0 0 0 3px var(--color-shadow-primary, #ff6400), inset 6px 0 0 rgba(255,255,255,0.2); background: rgba(255, 100, 0, 0.15); }
+    100% { box-shadow: none; }
+}
+
+.fatex-context-menu {
+    position: fixed;
+    z-index: 1000;
+    min-width: 180px;
+    background: rgba(20, 20, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 4px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    font-size: 13px;
+}
+
+.fatex-context-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    color: #ddd;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+
+.fatex-context-menu__item i {
+    width: 16px;
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.fatex-context-menu__item:hover {
+    background: var(--color-shadow-primary, #ff6400);
+    color: #fff;
+}
+
+.fatex-drag-scene-handle {
+    cursor: grab;
+    font-size: 11px;
+    padding: 5px 6px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    opacity: 0.92;
+    transition: all 0.15s ease;
+    margin-right: 3px;
+    pointer-events: auto;
+}
+.fatex-drag-scene-handle:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+.fatex-drag-scene-handle:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+.fatex-drag-scene-handle.fatex-drag--consequence {
+    color: #b83636;
+}
+.fatex-drag-scene-handle.fatex-drag--aspect {
+    color: #6b7280;
 }
