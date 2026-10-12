@@ -361,7 +361,8 @@ export class DomAspectWidget {
             const actor = game.actors.get(this.placement.actorId);
             if (actor) { actor.sheet.render(true); return; }
         }
-        if (typeof globalThis._openAspectManagerGlobal === "function") globalThis._openAspectManagerGlobal(this.aspectId);
+        if (typeof globalThis.showSceneAspectInManager === "function") globalThis.showSceneAspectInManager(this.aspectId);
+        else if (typeof globalThis._openAspectManagerGlobal === "function") globalThis._openAspectManagerGlobal(this.aspectId);
         else import("../apps/scene-aspects.js").then(({ SceneAspectsApp: App }) => new App({ focusAspectId: this.aspectId }).render(true));
     }
 

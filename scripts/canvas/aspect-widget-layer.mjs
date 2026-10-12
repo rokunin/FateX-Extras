@@ -833,7 +833,8 @@ export class AspectWidget extends PIXI.Container {
         }
         const SceneAspectsApp = foundry.utils.getProperty(window, "SceneAspectsApp") || null;
 
-        if (typeof _openAspectManagerGlobal === "function") _openAspectManagerGlobal(this.aspectId);
+        if (typeof globalThis.showSceneAspectInManager === "function") globalThis.showSceneAspectInManager(this.aspectId);
+        else if (typeof _openAspectManagerGlobal === "function") _openAspectManagerGlobal(this.aspectId);
         else {
             const existing = Object.values(ui.windows).find(w => w.constructor?.name === "SceneAspectsApp");
             if (existing) existing.close();

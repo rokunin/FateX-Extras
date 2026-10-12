@@ -482,75 +482,10 @@ export class SceneAspectsApp extends FormApplication {
 
         if (aspects !== null) {
             await storage.setFlag("fatex-extras", "sceneAspects", aspects);
-
-            if (game.user.isGM) {
-                for (const aspect of aspects) {
-                    await this._updateAspectDrawingsLocal(aspect);
-                }
-            }
-
-            for (const aspect of aspects) {
-                game.socket.emit("module.fatex-extras", {
-                    action: "UPDATE_ASPECT_DRAWINGS",
-                    aspectId: aspect.id
-                });
-            }
         }
         if (groups !== null) await storage.setFlag("fatex-extras", "sceneAspectGroups", groups);
         if (tags !== null) await storage.setFlag("fatex-extras", "sceneAspectTags", tags);
-
-        game.socket.emit("module.fatex-extras", { action: "REFRESH_APPS" });
-    }
-
-    async _updateAspectDrawingsLocal(aspect) {
-        const scene = game.scenes.active;
-        if (!scene) return;
-
-        const storage = await AspectStorage.getStorage();
-        const allTags = storage?.getFlag("fatex-extras", "sceneAspectTags") || [];
-        const aspectTags = (aspect.tagIds || []).map(tid => allTags.find(t => t.id === tid)).filter(Boolean);
-
-        const showTags = game.settings.get("fatex-extras", "sceneDrawingShowTags") ?? true;
-        const showInvokes = game.settings.get("fatex-extras", "sceneDrawingShowInvokes") ?? true;
-        const showHostile = game.settings.get("fatex-extras", "sceneDrawingShowHostile") ?? true;
-        const compactInvokes = game.settings.get("fatex-extras", "sceneDrawingCompactInvokes") ?? false;
-
-        const tagsText = (showTags && aspectTags.length > 0) ? `[${aspectTags.map(t => t.label).join(' | ')}]` : '';
-
-        let invokesLine = '';
-        if (showInvokes || showHostile) {
-            if (compactInvokes) {
-                if (showInvokes && showHostile) {
-                    invokesLine = `${"+".repeat(aspect.invokes || 0)} | ${"-".repeat(aspect.hostileInvokes || 0)}`;
-                } else if (showInvokes) {
-                    invokesLine = "+".repeat(aspect.invokes || 0);
-                } else {
-                    invokesLine = "-".repeat(aspect.hostileInvokes || 0);
-                }
-            } else {
-                const invokesLabel = game.i18n.localize("FAx.Global.Invokes");
-                const hostileLabel = game.i18n.localize("FAx.Global.HostileInvokes");
-
-                if (showInvokes && showHostile) {
-                    invokesLine = `${invokesLabel}: ${aspect.invokes || 0} | ${hostileLabel}: ${aspect.hostileInvokes || 0}`;
-                } else if (showInvokes) {
-                    invokesLine = `${invokesLabel}: ${aspect.invokes || 0}`;
-                } else {
-                    invokesLine = `${hostileLabel}: ${aspect.hostileInvokes || 0}`;
-                }
-            }
-        }
-
-        const text = aspect.name + (tagsText ? '\n' + tagsText : '') + (invokesLine ? '\n' + invokesLine : '');
-        const fillColor = aspect.color || "#4a4a4a";
-
-        const drawings = scene.drawings.filter(d => d.getFlag("fatex-extras", "isAspectDrawing") && d.getFlag("fatex-extras", "aspectId") === aspect.id);
-
-        for (const drawing of drawings) {
-            const height = drawing.shape.height;
-            const fontSize = Math.min(64, Math.max(10, Math.round(height * 0.18)));
-            await drawing.update({ text: text, fillColor: fillColor, fontSize: fontSize });
-        }
+game.socket.emit("module.fatex-extras", { action: "REFRESH_APPS" });
     }
 
     _onDragStart(event) {

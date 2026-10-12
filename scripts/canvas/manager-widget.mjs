@@ -69,18 +69,39 @@ export class ManagerCanvasWidget {
         });
     }
 
+    _captureScroll(root) {
+        const snaps = [];
+        if (root.scrollTop) snaps.push({ path: ":root", top: root.scrollTop });
+        const visit = (el, path) => {
+            if (el.scrollTop) snaps.push({ path, top: el.scrollTop });
+            Array.from(el.children).forEach((child, i) => visit(child, `${path}>${child.tagName}:nth-child(${i + 1})`));
+        };
+        Array.from(root.children).forEach((child, i) => visit(child, `${child.tagName}:nth-child(${i + 1})`));
+        return snaps;
+    }
+
+    _restoreScroll(root, snaps) {
+        for (const s of snaps) {
+            let el;
+            if (s.path === ":root") el = root;
+            else { try { el = root.querySelector(s.path); } catch { el = undefined; } }
+            if (!el) continue;
+            el.scrollTop = Math.min(s.top, Math.max(0, el.scrollHeight - el.clientHeight));
+        }
+    }
+
     async _renderAppIntoBody(container) {
         try {
             const data = await this._app.getData();
             const renderFn = foundry?.applications?.handlebars?.renderTemplate ?? globalThis.renderTemplate;
             const html = await renderFn(this._app.constructor.defaultOptions.template, data);
-            const scrollTop = container.scrollTop;
+            const scrollSnaps = this._captureScroll(container);
             container.innerHTML = html;
-            container.scrollTop = scrollTop;
             const restoreScroll = () => {
                 if (!container.isConnected) return;
-                container.scrollTop = Math.min(scrollTop, container.scrollHeight - container.clientHeight);
+                this._restoreScroll(container, scrollSnaps);
             };
+            restoreScroll();
             const $html = $(container);
 
             const $innerHeader = $html.find(".fatex-header");
@@ -143,12 +164,21 @@ export class ManagerCanvasWidget {
         if (!body) return;
 
 
-        if (document.querySelectorAll(".window-app.dragging, .placeable.dragging, .drag-selected, .fatex-scene-aspect.drag-left, .fatex-scene-aspect.drag-right, .aspect-tag-pill.drag-left, .aspect-tag-pill.drag-right, .fatex-aspect-group.drag-left, .fatex-aspect-group.drag-right").length) return;
+        if (window.__fatexDragActive || document.querySelectorAll(".window-app.dragging, .placeable.dragging, .drag-selected").length) {
+            if (window.__fatexDragActive && !this._dragRefreshQueued) {
+                this._dragRefreshQueued = true;
+                document.addEventListener("dragend", () => {
+                    this._dragRefreshQueued = false;
+                    this.refresh();
+                }, { once: true });
+            }
+            return;
+        }
         const data = await this._app.getData?.();
         if (data) {
             const signature = JSON.stringify({
-                g: (data.groups || []).map(x => ({ i: x.id, l: x.label, c: !!x.collapsed, k: x.aspects.map(a => a.id + a.name + (a.hidden ? "h" : "")).join(",") })),
-                t: (data.globalTags || []).map(x => x.id + x.label)
+                g: (data.groups || []).map(x => ({ i: x.id, l: x.label, c: !!x.collapsed, k: x.aspects.map(a => a.id + a.name + (a.tagIds || []).join("+") + (a.hidden ? "h" : "")).join(",") })),
+                t: (data.globalTags || []).map(x => x.id + x.label + (x.color || ""))
             });
             if (signature === this._lastSignature) return;
             this._lastSignature = signature;
@@ -306,6 +336,33 @@ export class ManagerCanvasWidget {
         this.element.style.transform = `scale(${s})`;
         this.element.style.left = `${screen.x - w/2}px`;
         this.element.style.top = `${screen.y - h/2}px`;
+    }
+
+    focusAspect(aspectId) {
+        if (!aspectId) return;
+        const apply = () => {
+            const body = this.element?.querySelector(".fatex-manager-widget__body");
+            if (!body) return false;
+            const target = body.querySelector(`.fatex-scene-aspect[data-id="${CSS.escape(aspectId)}"]`);
+            if (!target) return false;
+            target.closest(".fatex-group-content")?.classList?.remove("is-collapsed");
+            const collapse = target.closest(".fatex-aspect-group")?.querySelector(".fatex-group-header .group-collapse");
+            if (collapse) {
+                collapse.classList.remove("fa-chevron-right");
+                collapse.classList.add("fa-chevron-down");
+            }
+            const scroller = target.closest(".fatex-desk__content") || body;
+            const tRect = target.getBoundingClientRect();
+            const sRect = scroller.getBoundingClientRect();
+            scroller.scrollTop += (tRect.top - sRect.top) - (sRect.height - tRect.height) / 2;
+            target.classList.remove("fatex-focus");
+            void target.offsetWidth;
+            target.classList.add("fatex-focus");
+            clearTimeout(this._focusTimer);
+            this._focusTimer = setTimeout(() => target.classList.remove("fatex-focus"), 2600);
+            return true;
+        };
+        if (!apply()) this.refresh().then(apply).catch(() => {});
     }
 
     async _savePlacement() {
